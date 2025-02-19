@@ -3209,7 +3209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   letters: {fileID: 4900000, guid: 798e504decc373c4db3711389b6f18f8, type: 3}
-  words: {fileID: 4900000, guid: 63f944b2818bd7f4eb96d3f21d4f2632, type: 3}
+  words: {fileID: 4900000, guid: 0171d3ac28bc2c1459a247c383cd9eeb, type: 3}
   rarityFactor: 1.1
   letterWeights: []
   letterWeightsTotal: 0
@@ -4627,7 +4627,7 @@ MonoBehaviour:
   currentWordScore: {fileID: 0}
   levelText: {fileID: 0}
   scoreText: {fileID: 0}
-  levelSlider: {fileID: 0}
+  levelScoreSlider: {fileID: 0}
 --- !u!1 &1801005543
 GameObject:
   m_ObjectHideFlags: 0
