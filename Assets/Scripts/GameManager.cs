@@ -83,8 +83,8 @@ public class GameManager : MonoBehaviour
     /// Each <c>LetterTile</c> will call this when they are clicked.
     /// The appropriate action will be taken (e.g. activate tile, accept word...)
     /// </summary>
-    /// <param name="column">Column (y) outer index</param>
-    /// <param name="row">Row (x) inner index</param>
+    /// <param name="column">Column (x) outer index</param>
+    /// <param name="row">Row (y) inner index</param>
     public void OnTileClick(int column, int row)
     {
         // if tile clicked is in the selected tiles list, deselect all after it
@@ -114,7 +114,7 @@ public class GameManager : MonoBehaviour
         {
             // else, add to selected tiles if adjacent
             (int col, int row) mostRecentTile = selectedTiles[^1];
-            if (Mathf.Abs(mostRecentTile.col - column) <= 1 && Mathf.Abs(mostRecentTile.row - row) <= 1)
+            if (AreTilesAdjacent(mostRecentTile.col, mostRecentTile.row, column, row))
             {
                 letterTiles[column][row].SetIsSelected(true);
                 selectedTiles.Add((column, row));
@@ -128,6 +128,35 @@ public class GameManager : MonoBehaviour
                 }
                 selectedTiles.Clear();
             }
+        }
+    }
+
+    /// <summary>
+    /// Helper function for <c>OnTileClick</c> to determine if two tiles are adjacent and thus valid to connect.
+    /// </summary>
+    /// <param name="col1">Column (x) outer index for first tile</param>
+    /// <param name="row1">Row (y) inner index for first tile</param>
+    /// <param name="col2">Column (x) outer index for second tile</param>
+    /// <param name="row2">Row (y) inner index for second tile</param>
+    /// <returns><c>true</c> if the tiles are adjacent, else <c>false</c></returns>
+    private bool AreTilesAdjacent(int col1, int row1, int col2, int row2)
+    {
+        // if same column, can go up or down in row by 1
+        if (col1 == col2)
+        {
+            return Mathf.Abs(row1 - row2) == 1;
+        }
+        if (Mathf.Abs(col1 - col2) > 1) return false;
+        int rowDiff = row1 - row2;
+        if (col1 % 2 == 0)
+        {
+            // if even index, sides can be -1 or 0.
+            return rowDiff == 0 || rowDiff == -1;
+        }
+        else
+        {
+            // if odd index, sides can be 0 or +1.
+            return rowDiff == 0 || rowDiff == 1;
         }
     }
 }
