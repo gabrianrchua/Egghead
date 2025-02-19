@@ -25,7 +25,7 @@ public class UIManager : MonoBehaviour
 
     public void SetCurrentWord(string word)
     {
-        currentWordText.text = word;
+        currentWordText.text = word.ToUpper();
     }
 
     public void SetCurrentWordScore(int score)

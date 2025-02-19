@@ -103,7 +103,13 @@ public class GameManager : MonoBehaviour
             // accept word if last tile clicked AND is valid word
             if (index == selectedTiles.Count - 1)
             {
-                // TODO: implement this, check if word is valid
+                try
+                {
+                    SubmitCurrentWord();
+                } catch (System.InvalidOperationException)
+                {
+                    return;
+                }
             }
             else
             {
@@ -157,6 +163,16 @@ public class GameManager : MonoBehaviour
         {
             UIManager.instance.SetCurrentWordScore(score);
         }
+    }
+
+    private void SubmitCurrentWord()
+    {
+        // first check if word is valid
+        (string word, int score) = GetCurrentWord();
+        if (score == -1) throw new System.InvalidOperationException("Invalid word");
+
+        // TODO: finish implementation
+        Debug.Log("Submitted word " + word);
     }
 
     /// <summary>
