@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 public class CSVReader : MonoBehaviour
 {
@@ -24,11 +25,29 @@ public class CSVReader : MonoBehaviour
     {
         public string word;
         public string definition;
+        public int points;
     }
 
     public class WordList
     {
         public Word[] words;
+
+        public Word FindWord(string word)
+        {
+            int index = Array.BinarySearch(words, new Word { word = word }, new WordComparer());
+
+            if (index >= 0) return words[index];
+
+            throw new InvalidOperationException("Word " + word + " not found.");
+        }
+    }
+
+    private class WordComparer : IComparer<Word>
+    {
+        public int Compare(Word x, Word y)
+        {
+            return string.Compare(x.word, y.word, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     public WordList wordList = new WordList();
@@ -48,7 +67,7 @@ public class CSVReader : MonoBehaviour
 
         // ignore first row
         int letterTableSize = letterData.Length / 3 - 1;
-        int wordTableSize = wordData.Length / 2 - 1;
+        int wordTableSize = wordData.Length / 3 - 1;
 
         letterList.letters = new Letter[letterTableSize];
         wordList.words = new Word[wordTableSize];
@@ -65,10 +84,14 @@ public class CSVReader : MonoBehaviour
         for (int i = 0; i < wordTableSize; i++)
         {
             Word newWord = new Word();
-            newWord.word = wordData[2 * (i + 1)];
-            newWord.definition = wordData[2 * (i + 1) + 1];
+            newWord.word = wordData[3 * (i + 1)];
+            newWord.definition = wordData[3 * (i + 1) + 1];
+            newWord.points = int.Parse(wordData[3 * (i + 1) + 2]);
             wordList.words[i] = newWord;
         }
+
+        // sort wordList for efficient binary search later
+        Array.Sort(wordList.words, new WordComparer());
 
         // calculate letter weights and cache
         letterWeights = letterList.letters.Select(letter => 1f / Mathf.Pow(letter.bonus, rarityFactor)).ToArray();

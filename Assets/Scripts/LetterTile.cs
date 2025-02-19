@@ -49,6 +49,11 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    public char GetLetter()
+    {
+        return letter;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
         GameManager.instance.OnTileClick(column, row);

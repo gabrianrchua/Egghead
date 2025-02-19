@@ -4623,11 +4623,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42128818531dddc4aa444a213931bd42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentWordText: {fileID: 0}
-  currentWordScore: {fileID: 0}
-  levelText: {fileID: 0}
-  scoreText: {fileID: 0}
-  levelScoreSlider: {fileID: 0}
+  currentWordText: {fileID: 1903031859}
+  currentWordScore: {fileID: 1001707724}
+  levelText: {fileID: 163774161}
+  scoreText: {fileID: 1801005545}
+  levelScoreSlider: {fileID: 1200813644}
 --- !u!1 &1801005543
 GameObject:
   m_ObjectHideFlags: 0

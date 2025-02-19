@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using static CSVReader;
+using System.Text;
 
 public class GameManager : MonoBehaviour
 {
@@ -59,6 +60,14 @@ public class GameManager : MonoBehaviour
 
             letterTiles[i] = current;
         }
+
+        // initialize UI
+        // TODO: load saved game from disk
+        UIManager ui = UIManager.instance;
+        ui.ClearCurrentWordScore();
+        ui.SetCurrentWord("");
+        ui.SetLevel(1);
+        ui.SetCurrentScore(0, 0);
     }
 
     // Randomly pick a letter according to letter probability distribution
@@ -87,30 +96,38 @@ public class GameManager : MonoBehaviour
     /// <param name="row">Row (y) inner index</param>
     public void OnTileClick(int column, int row)
     {
-        // if tile clicked is in the selected tiles list, deselect all after it
+        // if tile clicked is in the selected tiles list
         int index = selectedTiles.IndexOf((column, row));
         if (index != -1)
         {
-            for (int i = index; i < selectedTiles.Count; i++)
+            // accept word if last tile clicked AND is valid word
+            if (index == selectedTiles.Count - 1)
             {
-                (int col, int row) coordToDeselect = selectedTiles[i];
-                letterTiles[coordToDeselect.col][coordToDeselect.row].SetIsSelected(false);
+                // TODO: implement this, check if word is valid
             }
-            selectedTiles.RemoveRange(index, selectedTiles.Count - index);
+            else
+            {
+                // deselect all after it
+                for (int i = index; i < selectedTiles.Count; i++)
+                {
+                    (int col, int row) coordToDeselect = selectedTiles[i];
+                    letterTiles[coordToDeselect.col][coordToDeselect.row].SetIsSelected(false);
+                }
+                selectedTiles.RemoveRange(index, selectedTiles.Count - index);
 
-            // then, readd the selected tile
-            letterTiles[column][row].SetIsSelected(true);
-            selectedTiles.Add((column, row));
-            return;
+                // then, readd the selected tile
+                letterTiles[column][row].SetIsSelected(true);
+                selectedTiles.Add((column, row));
+            }
         }
-
-        // if the tile clicked is not selected
-        // start new word if no selected tiles yet
-        if (selectedTiles.Count == 0)
+        else if (selectedTiles.Count == 0)
         {
+            // if the tile clicked is not selected
+            // start new word if no selected tiles yet
             selectedTiles.Add((column, row));
             letterTiles[column][row].SetIsSelected(true);
-        } else
+        }
+        else
         {
             // else, add to selected tiles if adjacent
             (int col, int row) mostRecentTile = selectedTiles[^1];
@@ -128,6 +145,42 @@ public class GameManager : MonoBehaviour
                 }
                 selectedTiles.Clear();
             }
+        }
+
+        // update word UI
+        (string word, int score) = GetCurrentWord();
+        UIManager.instance.SetCurrentWord(word);
+        if (score == -1)
+        {
+            UIManager.instance.ClearCurrentWordScore();
+        } else
+        {
+            UIManager.instance.SetCurrentWordScore(score);
+        }
+    }
+
+    /// <summary>
+    /// Helper function to calculate the current word from the <c>selectedTiles</c> and return the score if applicable.
+    /// </summary>
+    /// <returns>Tuple with the current word string and its score int, or -1 if not a valid word.</returns>
+    private (string, int) GetCurrentWord()
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach ((int col, int row) in selectedTiles)
+        {
+            // TODO: special case for Q
+            char letter = letterTiles[col][row].GetLetter();
+            sb.Append(letter);
+        }
+        string word = sb.ToString().ToLower();
+
+        try
+        {
+            Word wordDetails = csvReader.wordList.FindWord(word);
+            return (word, wordDetails.points);
+        } catch (System.InvalidOperationException)
+        {
+            return (word, -1);
         }
     }
 

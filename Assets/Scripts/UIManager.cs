@@ -23,16 +23,25 @@ public class UIManager : MonoBehaviour
         instance = this;
     }
 
-    public void SetCurrentWord(string word, int score)
+    public void SetCurrentWord(string word)
     {
         currentWordText.text = word;
+    }
+
+    public void SetCurrentWordScore(int score)
+    {
         currentWordScore.text = score.ToString() + " points";
+    }
+
+    public void ClearCurrentWordScore()
+    {
+        currentWordScore.text = "";
     }
 
     public void SetCurrentScore(int score, float scorePercentage)
     {
         scoreText.text = score.ToString("N0");
-        levelScoreSlider.value = scorePercentage;
+        levelScoreSlider.value = scorePercentage / 100f;
     }
 
     public void SetLevel(int level)
