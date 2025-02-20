@@ -77,4 +77,18 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
         this.isSelected = isSelected;
         ApplySprite();
     }
+
+    public void DestroyTile()
+    {
+        // TODO: future: animate destruction
+        Destroy(gameObject);
+    }
+
+    public void SetPosition(float x, float y, int column, int row)
+    {
+        // TODO: future: animate position change if it changed
+        transform.localPosition = new Vector3(x, y, 0);
+        this.column = column;
+        this.row = row;
+    }
 }

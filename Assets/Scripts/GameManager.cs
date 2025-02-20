@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
 
     private List<LetterTile>[] letterTiles;
     private List<(int col, int row)> selectedTiles;
+    private int score;
 
     private const float letterBaseYOdd = -4.5f;
     private const float letterBaseYEven = -4f;
@@ -67,7 +68,8 @@ public class GameManager : MonoBehaviour
         ui.ClearCurrentWordScore();
         ui.SetCurrentWord("");
         ui.SetLevel(1);
-        ui.SetCurrentScore(0, 0);
+        ui.SetCurrentScore(0, 50f);
+        score = 0;
     }
 
     // Randomly pick a letter according to letter probability distribution
@@ -108,6 +110,7 @@ public class GameManager : MonoBehaviour
                     SubmitCurrentWord();
                 } catch (System.InvalidOperationException)
                 {
+                    Debug.Log("User tried to submit invalid word!");
                     return;
                 }
             }
@@ -172,7 +175,54 @@ public class GameManager : MonoBehaviour
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
 
         // TODO: finish implementation
-        Debug.Log("Submitted word " + word);
+        Debug.Log("Submitted word " + word + " for " + score.ToString());
+
+        // increment score and display
+        this.score += score;
+        UIManager.instance.SetCurrentScore(this.score, 50f);
+        UIManager.instance.ClearCurrentWordScore();
+        UIManager.instance.SetCurrentWord("");
+        // TODO: implement levels and level percentage, level up
+
+        // destroy selected tiles and spawn new ones
+        List<(int col, LetterTile tile)> tilesToDestroy = new List<(int col, LetterTile tile)>();
+        foreach ((int col, int row) in selectedTiles)
+        {
+            LetterTile tileToDestroy = letterTiles[col][row];
+            tilesToDestroy.Add((col, tileToDestroy));
+            tileToDestroy.DestroyTile();
+        }
+        foreach ((int col, LetterTile tile) in tilesToDestroy)
+        {
+            letterTiles[col].Remove(tile);
+        }
+        selectedTiles.Clear();
+
+        // refresh board and tell new tiles their new positions
+        for (int i = 0; i < letterTiles.Length; i++)
+        {
+            // even index should have 7 tiles, odd should have 8
+            bool isEven = i % 2 == 0;
+            int numTiles = isEven ? 7 : 8;
+            int numInColumn = letterTiles[i].Count;
+            for (int j = 0; j < numTiles; j++)
+            {
+                float x = letterBaseX + (letterDeltaX * i);
+                float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
+                if (j >= numInColumn)
+                {
+                    // need to create a new tile
+                    LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
+                    newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
+                    letterTiles[i].Add(newTile);
+                } else
+                {
+                    // need to tell existing tile what its position is
+                    letterTiles[i][j].SetPosition(x, y, i, j);
+                    letterTiles[i][j].SetIsSelected(false);
+                }
+            }
+        }
     }
 
     /// <summary>
