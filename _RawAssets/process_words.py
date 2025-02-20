@@ -2,8 +2,8 @@ words = None
 letters = []
 
 WORD_LENGTH_MULTIPLIER = 1.2 # for each letter > 3, multiply score by this.
-SCORE_MULTIPLIER = 1 # multiplier to inflate all scores equally
-SCORE_BASE = 50 # base to add to every letter score before any multiplier
+SCORE_MULTIPLIER = 5 # multiplier to inflate all scores equally
+SCORE_BASE = 10 # base to add to every letter score before any multiplier (reduce the effect of the rare letter bonus)
 
 with open("words_alpha.txt") as f:
   words = f.read().split("\n")
