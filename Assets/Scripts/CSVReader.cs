@@ -52,8 +52,8 @@ public class CSVReader : MonoBehaviour
 
     public WordList wordList = new WordList();
     public LetterList letterList = new LetterList();
-    public float[] letterWeights; // calculate here and cache when random letter needed
-    public float letterWeightsTotal;
+    [HideInInspector] public float[] letterWeights; // calculate here and cache when random letter needed
+    [HideInInspector] public float letterWeightsTotal;
 
     void Awake()
     {

@@ -18,8 +18,18 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
 
     public void Initialize(char letter, int column, int row, TileType type)
     {
-        this.letter = letter; // TODO: special case for Q
-        letterText.text = letter.ToString();
+        this.letter = letter;
+        if (letter == 'Q')
+        {
+            // special case to display Q as Qu
+            letterText.text = "Qu";
+            letterText.fontSize = 6.5f;
+        }
+        else
+        {
+            letterText.text = letter.ToString();
+            letterText.fontSize = 10f;
+        }
         this.column = column;
         this.row = row;
         tileType = type;
@@ -27,7 +37,9 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
         ApplySprite();
     }
 
-    // apply the correct sprite based on current state
+    /// <summary>
+    /// Apply the correct sprite based on current state and type
+    /// </summary>
     private void ApplySprite()
     {
         // disable everything
@@ -41,7 +53,8 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
                 if (isSelected)
                 {
                     normalSelectedSprite.SetActive(true);
-                } else
+                }
+                else
                 {
                     normalSprite.SetActive(true);
                 }

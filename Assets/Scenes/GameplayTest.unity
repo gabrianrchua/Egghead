@@ -4580,7 +4580,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -5884,6 +5884,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1114713377}
     m_Modifications:
+    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
+      propertyPath: m_text
+      value: Qu
+      objectReference: {fileID: 0}
+    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
+      propertyPath: m_fontSize
+      value: 6.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 6.5
+      objectReference: {fileID: 0}
     - target: {fileID: 7808048834463098412, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.38

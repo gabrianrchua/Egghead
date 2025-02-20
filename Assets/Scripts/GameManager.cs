@@ -184,9 +184,8 @@ public class GameManager : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         foreach ((int col, int row) in selectedTiles)
         {
-            // TODO: special case for Q
             char letter = letterTiles[col][row].GetLetter();
-            sb.Append(letter);
+            sb.Append(letter == 'Q' ? "QU" : letter);
         }
         string word = sb.ToString().ToLower();
 
