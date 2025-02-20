@@ -1588,6 +1588,7 @@ GameObject:
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1729,6 +1730,20 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_MaxRayIntersections: 0
+--- !u!114 &519420034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9404dcdf8ea10a43be92f77aca0c9ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 519420031}
+  desiredAspectRatio: 0.5625
 --- !u!1 &529896840
 GameObject:
   m_ObjectHideFlags: 0
@@ -5884,18 +5899,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1114713377}
     m_Modifications:
-    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
-      propertyPath: m_text
-      value: Qu
-      objectReference: {fileID: 0}
-    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
-      propertyPath: m_fontSize
-      value: 6.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4855769770925336700, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
-      propertyPath: m_fontSizeBase
-      value: 6.5
-      objectReference: {fileID: 0}
     - target: {fileID: 7808048834463098412, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.38
