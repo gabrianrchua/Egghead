@@ -361,6 +361,7 @@ GameObject:
   - component: {fileID: 7808048834463098412}
   - component: {fileID: 6318527394106390291}
   - component: {fileID: 2658878301010228824}
+  - component: {fileID: 1646224789042219306}
   m_Layer: 0
   m_Name: LetterTile
   m_TagString: Untagged
@@ -401,6 +402,7 @@ MonoBehaviour:
   letterText: {fileID: 4855769770925336700}
   normalSprite: {fileID: 4796725772610772746}
   normalSelectedSprite: {fileID: 5950141299617781311}
+  dropAnimationDuration: 0.5
 --- !u!61 &2658878301010228824
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -447,3 +449,25 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!95 &1646224789042219306
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9117969351553859506}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 595289f530ff64a4c83df6ca4efbfc7f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,6 +8,7 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
     [SerializeField] private TMP_Text letterText;
     [SerializeField] private GameObject normalSprite;
     [SerializeField] private GameObject normalSelectedSprite;
+    [SerializeField] private float dropAnimationDuration = 0.5f;
 
     private char letter;
     private int column; // y; outer index
@@ -86,9 +88,39 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
 
     public void SetPosition(float x, float y, int column, int row)
     {
-        // TODO: future: animate position change if it changed
-        transform.localPosition = new Vector3(x, y, 0);
+        //transform.localPosition = new Vector3(x, y, 0);
+        if (Mathf.Abs(transform.position.y - y) > 0.1f)
+        {
+            // we moved, play drop animation
+            StartCoroutine(PlayDropAnimation(transform.position.y, y, dropAnimationDuration));
+        }
+
         this.column = column;
         this.row = row;
+    }
+
+    private IEnumerator PlayDropAnimation(float originalY, float destinationY, float duration)
+    {
+        float timeElapsed = 0;
+        float originalX = transform.position.x;
+
+        while (timeElapsed < duration)
+        {
+            timeElapsed += Time.deltaTime;
+            //transform.position = new Vector3(originalX, Mathf.Lerp(originalY, destinationY, timeElapsed / duration), 0f); // linear
+            transform.position = new Vector3(originalX, Mathf.Lerp(transform.position.y, destinationY, 0.02f), 0f); // nonlinear
+            yield return new WaitForEndOfFrame();
+        }
+
+        transform.position = new Vector3(originalX, destinationY, 0f);
+    }
+
+    private void DestroyAnimator()
+    {
+        Animator animator = GetComponent<Animator>();
+        if (animator != null)
+        {
+            Destroy(animator);
+        }
     }
 }
