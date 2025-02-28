@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private Slider levelScoreSlider;
+    [SerializeField] private GameObject validWordBackground;
 
     public static UIManager instance;
 
@@ -31,11 +32,13 @@ public class UIManager : MonoBehaviour
     public void SetCurrentWordScore(int score)
     {
         currentWordScore.text = score.ToString() + " points";
+        validWordBackground.SetActive(true);
     }
 
     public void ClearCurrentWordScore()
     {
         currentWordScore.text = "";
+        validWordBackground.SetActive(false);
     }
 
     public void SetCurrentScore(int score, float scorePercentage)
