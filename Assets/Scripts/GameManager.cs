@@ -102,16 +102,27 @@ public class GameManager : MonoBehaviour
         int index = selectedTiles.IndexOf((column, row));
         if (index != -1)
         {
-            // accept word if last tile clicked AND is valid word
             if (index == selectedTiles.Count - 1)
             {
-                try
+                // if user clicked the most recent tile selected again...
+                if (selectedTiles.Count == 1)
                 {
-                    SubmitCurrentWord();
-                } catch (System.InvalidOperationException)
+                    // deselect the only tile selected
+                    letterTiles[column][row].SetIsSelected(false);
+                    selectedTiles.Clear();
+                }
+                else
                 {
-                    Debug.Log("User tried to submit invalid word!");
-                    return;
+                    // accept word if last tile clicked AND is valid word
+                    try
+                    {
+                        SubmitCurrentWord();
+                    }
+                    catch (System.InvalidOperationException)
+                    {
+                        Debug.Log("User tried to submit invalid word!");
+                        return;
+                    }
                 }
             }
             else
@@ -162,7 +173,8 @@ public class GameManager : MonoBehaviour
         if (score == -1)
         {
             UIManager.instance.ClearCurrentWordScore();
-        } else
+        }
+        else
         {
             UIManager.instance.SetCurrentWordScore(score);
         }
@@ -174,7 +186,6 @@ public class GameManager : MonoBehaviour
         (string word, int score) = GetCurrentWord();
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
 
-        // TODO: finish implementation
         Debug.Log("Submitted word " + word + " for " + score.ToString());
 
         // increment score and display
@@ -215,7 +226,8 @@ public class GameManager : MonoBehaviour
                     LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
                     newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
                     letterTiles[i].Add(newTile);
-                } else
+                }
+                else
                 {
                     // need to tell existing tile what its position is
                     letterTiles[i][j].SetPosition(x, y, i, j);
@@ -243,7 +255,8 @@ public class GameManager : MonoBehaviour
         {
             Word wordDetails = csvReader.wordList.FindWord(word);
             return (word, wordDetails.points);
-        } catch (System.InvalidOperationException)
+        }
+        catch (System.InvalidOperationException)
         {
             return (word, -1);
         }
