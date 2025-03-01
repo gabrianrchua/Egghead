@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class LetterTile : MonoBehaviour, IPointerClickHandler
+public class LetterTile : MonoBehaviour
 {
     [SerializeField] private TMP_Text letterText;
     [SerializeField] private GameObject normalSprite;
@@ -69,7 +69,8 @@ public class LetterTile : MonoBehaviour, IPointerClickHandler
         return letter;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    //public void OnPointerClick(PointerEventData _)
+    public void OnPointerClick()
     {
         GameManager.instance.OnTileClick(column, row);
     }
