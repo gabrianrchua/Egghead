@@ -12,7 +12,6 @@ public class GameManager : MonoBehaviour
 
     private List<LetterTile>[] letterTiles;
     private List<(int col, int row)> selectedTiles;
-    private int score;
 
     private const float letterBaseYOdd = -4.5f;
     private const float letterBaseYEven = -4f;
@@ -65,11 +64,12 @@ public class GameManager : MonoBehaviour
         // initialize UI
         // TODO: load saved game from disk
         UIManager ui = UIManager.instance;
+        LevelManager levelManager = LevelManager.instance;
+
         ui.ClearCurrentWordScore();
         ui.SetCurrentWord("");
-        ui.SetLevel(1);
-        ui.SetCurrentScore(0, 50f);
-        score = 0;
+        ui.SetLevel(levelManager.Level);
+        ui.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
     }
 
     // Randomly pick a letter according to letter probability distribution
@@ -180,20 +180,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SubmitCurrentWord()
+    public void SubmitCurrentWord()
     {
         // first check if word is valid
         (string word, int score) = GetCurrentWord();
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
 
-        Debug.Log("Submitted word " + word + " for " + score.ToString());
+        Debug.Log("Submitted word '" + word + "' for " + score.ToString());
 
         // increment score and display
-        this.score += score;
-        UIManager.instance.SetCurrentScore(this.score, 50f);
-        UIManager.instance.ClearCurrentWordScore();
-        UIManager.instance.SetCurrentWord("");
-        // TODO: implement levels and level percentage, level up
+        // cache instances
+        LevelManager levelManager = LevelManager.instance;
+        UIManager uiManager = UIManager.instance;
+
+        levelManager.AddScore(score);
+        uiManager.SetLevel(levelManager.Level);
+        uiManager.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
+        uiManager.ClearCurrentWordScore();
+        uiManager.SetCurrentWord("");
+        // TODO: level up graphics
 
         // destroy selected tiles and spawn new ones
         List<(int col, LetterTile tile)> tilesToDestroy = new List<(int col, LetterTile tile)>();

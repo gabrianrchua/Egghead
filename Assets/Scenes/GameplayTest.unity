@@ -3049,6 +3049,7 @@ GameObject:
   - component: {fileID: 1114713377}
   - component: {fileID: 1114713378}
   - component: {fileID: 1114713379}
+  - component: {fileID: 1114713380}
   m_Layer: 0
   m_Name: TileArea
   m_TagString: Untagged
@@ -3154,6 +3155,25 @@ MonoBehaviour:
   rarityFactor: 1.1
   letterWeights: []
   letterWeightsTotal: 0
+--- !u!114 &1114713380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1114713376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d74ebe0dae81f064f947a4dfc07bc70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelScoreA: 3000
+  levelScoreB: 0
+  levelScoreC: 500
+  heatProbabilityA: 0.7
+  heatProbabilityB: -0.3
+  heatProbabilityC: 4
+  heatProbabilityD: 0.1
 --- !u!1001 &1147138929
 PrefabInstance:
   m_ObjectHideFlags: 0
