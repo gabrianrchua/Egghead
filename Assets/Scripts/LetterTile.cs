@@ -8,13 +8,26 @@ public class LetterTile : MonoBehaviour
     [SerializeField] private TMP_Text letterText;
     [SerializeField] private GameObject normalSprite;
     [SerializeField] private GameObject normalSelectedSprite;
+    [SerializeField] private GameObject fireSprite;
+    [SerializeField] private GameObject fireSelectedSprite;
+    [SerializeField] private GameObject bonusSprite;
+    [SerializeField] private GameObject bonusSelectedSprite;
+    [SerializeField] private GameObject goldSprite;
+    [SerializeField] private GameObject goldSelectedSprite;
+    [SerializeField] private GameObject diamondSprite;
+    [SerializeField] private GameObject diamondSelectedSprite;
     [SerializeField] private float dropAnimationDuration = 0.5f;
 
     private char letter;
+    private TileType tileType;
     private int column; // y; outer index
     private int row; // x; inner index
-    private TileType tileType;
     private bool isSelected;
+
+    public TileType GetTileType()
+    {
+        return tileType;
+    }
 
     public enum TileType { Normal, Fire, Bonus, Gold, Diamond }
 
@@ -44,11 +57,19 @@ public class LetterTile : MonoBehaviour
     /// </summary>
     private void ApplySprite()
     {
-        // disable everything
-        // TODO: implement all other tile types
+        // disable everything first
         normalSprite.SetActive(false);
         normalSelectedSprite.SetActive(false);
+        fireSprite.SetActive(false);
+        fireSelectedSprite.SetActive(false);
+        bonusSprite.SetActive(false);
+        bonusSelectedSprite.SetActive(false);
+        goldSprite.SetActive(false);
+        goldSelectedSprite.SetActive(false);
+        diamondSprite.SetActive(false);
+        diamondSelectedSprite.SetActive(false);
 
+        // enable the proper type
         switch (tileType)
         {
             case TileType.Normal:
@@ -60,6 +81,46 @@ public class LetterTile : MonoBehaviour
                 {
                     normalSprite.SetActive(true);
                 }
+                break;
+            case TileType.Fire:
+                if (isSelected)
+                {
+                    fireSelectedSprite.SetActive(true);
+                }
+                else
+                {
+                    fireSprite.SetActive(true);
+                }
+                break;
+            case TileType.Bonus:
+                if (isSelected)
+                {
+                    bonusSelectedSprite.SetActive(true);
+                } else
+                {
+                    bonusSprite.SetActive(true);
+                }
+                break;
+            case TileType.Gold:
+                if (isSelected)
+                {
+                    goldSelectedSprite.SetActive(true);
+                } else
+                {
+                    goldSprite.SetActive(true);
+                }
+                break;
+            case TileType.Diamond:
+                if (isSelected)
+                {
+                    diamondSelectedSprite.SetActive(true);
+                } else
+                {
+                    diamondSprite.SetActive(true);
+                }
+                break;
+            default:
+                Debug.LogWarning("This LetterTile had an invalid TileType: " + tileType.ToString());
                 break;
         }
     }
@@ -118,8 +179,7 @@ public class LetterTile : MonoBehaviour
 
     private void DestroyAnimator()
     {
-        Animator animator = GetComponent<Animator>();
-        if (animator != null)
+        if (TryGetComponent<Animator>(out var animator))
         {
             Destroy(animator);
         }

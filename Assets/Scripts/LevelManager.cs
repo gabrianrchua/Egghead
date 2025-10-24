@@ -36,6 +36,14 @@ public class LevelManager : MonoBehaviour
 
     public static LevelManager instance;
 
+    public float Heat
+    {
+        get
+        {
+            return heatProbabilityA / (1 + Mathf.Exp(heatProbabilityB * Level + heatProbabilityC)) + heatProbabilityD;
+        }
+    }
+
     private void Awake()
     {
         if (instance != null)

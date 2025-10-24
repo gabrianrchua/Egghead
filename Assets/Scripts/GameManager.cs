@@ -7,9 +7,11 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField] private CSVReader csvReader;
     [SerializeField] private LetterTile letterTilePrefab;
+    [SerializeField] private float[] tileTypeMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
 
     public static GameManager instance;
 
+    private Dictionary<LetterTile.TileType, float> tileTypeMultipliersDict;
     private List<LetterTile>[] letterTiles;
     private List<(int col, int row)> selectedTiles;
 
@@ -33,6 +35,15 @@ public class GameManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
     {
+        tileTypeMultipliersDict = new()
+        {
+            { LetterTile.TileType.Normal, 1f },
+            { LetterTile.TileType.Fire, 1f },
+            { LetterTile.TileType.Bonus, tileTypeMultipliers[0] },
+            { LetterTile.TileType.Gold, tileTypeMultipliers[1] },
+            { LetterTile.TileType.Diamond, tileTypeMultipliers[2] }
+        };
+
         // clear children to prepare for managed lettertiles
         foreach (Transform child in transform)
         {
@@ -229,7 +240,13 @@ public class GameManager : MonoBehaviour
                 {
                     // need to create a new tile
                     LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                    newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
+                    if (Random.value < levelManager.Heat)
+                    {
+                        newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Fire);
+                    } else
+                    {
+                        newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
+                    }
                     letterTiles[i].Add(newTile);
                 }
                 else
@@ -248,10 +265,13 @@ public class GameManager : MonoBehaviour
     /// <returns>Tuple with the current word string and its score int, or -1 if not a valid word.</returns>
     private (string, int) GetCurrentWord()
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
+        float multiplier = 1f;
         foreach ((int col, int row) in selectedTiles)
         {
-            char letter = letterTiles[col][row].GetLetter();
+            LetterTile tile = letterTiles[col][row];
+            char letter = tile.GetLetter();
+            multiplier *= tileTypeMultipliersDict[tile.GetTileType()];
             sb.Append(letter == 'Q' ? "QU" : letter);
         }
         string word = sb.ToString().ToLower();
@@ -259,7 +279,7 @@ public class GameManager : MonoBehaviour
         try
         {
             Word wordDetails = csvReader.wordList.FindWord(word);
-            return (word, wordDetails.points);
+            return (word, Mathf.FloorToInt(wordDetails.points * multiplier));
         }
         catch (System.InvalidOperationException)
         {
