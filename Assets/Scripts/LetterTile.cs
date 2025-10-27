@@ -23,6 +23,7 @@ public class LetterTile : MonoBehaviour
     private int column; // y; outer index
     private int row; // x; inner index
     private bool isSelected;
+    private bool isAnimating; // if animation is playing, disable touches
 
     public TileType GetTileType()
     {
@@ -96,7 +97,8 @@ public class LetterTile : MonoBehaviour
                 if (isSelected)
                 {
                     bonusSelectedSprite.SetActive(true);
-                } else
+                }
+                else
                 {
                     bonusSprite.SetActive(true);
                 }
@@ -105,7 +107,8 @@ public class LetterTile : MonoBehaviour
                 if (isSelected)
                 {
                     goldSelectedSprite.SetActive(true);
-                } else
+                }
+                else
                 {
                     goldSprite.SetActive(true);
                 }
@@ -114,7 +117,8 @@ public class LetterTile : MonoBehaviour
                 if (isSelected)
                 {
                     diamondSelectedSprite.SetActive(true);
-                } else
+                }
+                else
                 {
                     diamondSprite.SetActive(true);
                 }
@@ -133,6 +137,7 @@ public class LetterTile : MonoBehaviour
     //public void OnPointerClick(PointerEventData _)
     public void OnPointerClick()
     {
+        if (isAnimating) return;
         GameManager.instance.OnTileClick(column, row);
     }
 
@@ -163,6 +168,7 @@ public class LetterTile : MonoBehaviour
 
     private IEnumerator PlayDropAnimation(float originalY, float destinationY, float duration)
     {
+        isAnimating = true;
         float timeElapsed = 0;
         float originalX = transform.position.x;
 
@@ -175,6 +181,7 @@ public class LetterTile : MonoBehaviour
         }
 
         transform.position = new Vector3(originalX, destinationY, 0f);
+        isAnimating = false;
     }
 
     private void DestroyAnimator()

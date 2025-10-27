@@ -3546,6 +3546,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   csvReader: {fileID: 1114713379}
   letterTilePrefab: {fileID: 6318527394106390291, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
+  bonusTileTypeScoreMultipliers:
+  - 1.25
+  - 1.5
+  - 2
+  bonusTileTypeProbabilityMultipliers:
+  - 1
+  - 0.5
+  - 0.25
+  bonusTileA: 0.0005
+  bonusTileB: 0
+  bonusTileMax: 0.5
 --- !u!114 &1114713379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3578,10 +3589,10 @@ MonoBehaviour:
   levelScoreA: 3000
   levelScoreB: 0
   levelScoreC: 500
-  heatProbabilityA: 0.7
+  heatProbabilityA: 0.5
   heatProbabilityB: -0.3
   heatProbabilityC: 4
-  heatProbabilityD: 0.1
+  heatProbabilityD: 0
 --- !u!1001 &1147138929
 PrefabInstance:
   m_ObjectHideFlags: 0

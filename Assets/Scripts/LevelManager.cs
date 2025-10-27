@@ -7,13 +7,21 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private float levelScoreB;
     [SerializeField] private float levelScoreC = 3000f;
 
-    // heat increases each level from 0.1 - 0.8 for probability of fire tile per turn, reduced by high value words
+    // heat increases each level for probability of fire tile per turn, reduced by high value words
     // heat probability per level = modified sigmoid; (a / (1 + e^(bx+c))) + d
-    [SerializeField] private float heatProbabilityA = 0.7f;
+    // default values: 0.01 to 0.5, plateauing around level 25
+    [SerializeField] private float heatProbabilityA = 0.5f;
     [SerializeField] private float heatProbabilityB = -0.3f;
     [SerializeField] private float heatProbabilityC = 4f;
-    [SerializeField] private float heatProbabilityD = 0.1f;
+    [SerializeField] private float heatProbabilityD = 0f;
 
+    public float Heat
+    {
+        get
+        {
+            return heatProbabilityA / (1 + Mathf.Exp(heatProbabilityB * Level + heatProbabilityC)) + heatProbabilityD;
+        }
+    }
     public int TotalScore { get; private set; }
     public int Level { get; private set; }
     public int LevelScoreRequirement
@@ -32,17 +40,9 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    private int currentLevelScore;
-
     public static LevelManager instance;
-
-    public float Heat
-    {
-        get
-        {
-            return heatProbabilityA / (1 + Mathf.Exp(heatProbabilityB * Level + heatProbabilityC)) + heatProbabilityD;
-        }
-    }
+    
+    private int currentLevelScore;
 
     private void Awake()
     {

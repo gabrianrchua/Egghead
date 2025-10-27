@@ -7,7 +7,7 @@ public class CSVReader : MonoBehaviour
 {
     [SerializeField] private TextAsset letters;
     [SerializeField] private TextAsset words;
-    [SerializeField] private float rarityFactor; // weight = 1 / rarity ^ rarityFactor
+    [SerializeField] private float rarityFactor; // weight = 1 / (rarity ^ rarityFactor)
 
     public class Letter
     {
@@ -50,8 +50,8 @@ public class CSVReader : MonoBehaviour
         }
     }
 
-    public WordList wordList = new WordList();
-    public LetterList letterList = new LetterList();
+    public WordList wordList = new();
+    public LetterList letterList = new();
     [HideInInspector] public float[] letterWeights; // calculate here and cache when random letter needed
     [HideInInspector] public float letterWeightsTotal;
 
@@ -72,21 +72,25 @@ public class CSVReader : MonoBehaviour
         letterList.letters = new Letter[letterTableSize];
         wordList.words = new Word[wordTableSize];
 
-        for (int i = 0; i < letterTableSize; i++ )
+        for (int i = 0; i < letterTableSize; i++)
         {
-            Letter newLetter = new Letter();
-            newLetter.letter = letterData[3 * (i + 1)][0];
-            newLetter.bonus = int.Parse(letterData[3 * (i + 1) + 1]);
-            newLetter.scrabblePoints = int.Parse(letterData[3 * (i + 1) + 2]);
+            Letter newLetter = new()
+            {
+                letter = letterData[3 * (i + 1)][0],
+                bonus = int.Parse(letterData[3 * (i + 1) + 1]),
+                scrabblePoints = int.Parse(letterData[3 * (i + 1) + 2])
+            };
             letterList.letters[i] = newLetter;
         }
 
         for (int i = 0; i < wordTableSize; i++)
         {
-            Word newWord = new Word();
-            newWord.word = wordData[3 * (i + 1)];
-            newWord.definition = wordData[3 * (i + 1) + 1];
-            newWord.points = int.Parse(wordData[3 * (i + 1) + 2]);
+            Word newWord = new()
+            {
+                word = wordData[3 * (i + 1)],
+                definition = wordData[3 * (i + 1) + 1],
+                points = int.Parse(wordData[3 * (i + 1) + 2])
+            };
             wordList.words[i] = newWord;
         }
 

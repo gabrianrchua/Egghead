@@ -7,7 +7,12 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField] private CSVReader csvReader;
     [SerializeField] private LetterTile letterTilePrefab;
-    [SerializeField] private float[] tileTypeMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
+    [SerializeField] private float[] bonusTileTypeScoreMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
+    [SerializeField] private float[] bonusTileTypeProbabilityMultipliers = { 1f, 0.5f, 0.25f }; // bonus, gold, diamond
+    // simple ax+b, with max cap. default values - max out at 50% with 1000 score move
+    [SerializeField] private float bonusTileA = 0.0005f;
+    [SerializeField] private float bonusTileB = 0f;
+    [SerializeField] private float bonusTileMax = 0.5f;
 
     public static GameManager instance;
 
@@ -39,9 +44,9 @@ public class GameManager : MonoBehaviour
         {
             { LetterTile.TileType.Normal, 1f },
             { LetterTile.TileType.Fire, 1f },
-            { LetterTile.TileType.Bonus, tileTypeMultipliers[0] },
-            { LetterTile.TileType.Gold, tileTypeMultipliers[1] },
-            { LetterTile.TileType.Diamond, tileTypeMultipliers[2] }
+            { LetterTile.TileType.Bonus, bonusTileTypeScoreMultipliers[0] },
+            { LetterTile.TileType.Gold, bonusTileTypeScoreMultipliers[1] },
+            { LetterTile.TileType.Diamond, bonusTileTypeScoreMultipliers[2] }
         };
 
         // clear children to prepare for managed lettertiles
@@ -212,7 +217,7 @@ public class GameManager : MonoBehaviour
         // TODO: level up graphics
 
         // destroy selected tiles and spawn new ones
-        List<(int col, LetterTile tile)> tilesToDestroy = new List<(int col, LetterTile tile)>();
+        List<(int col, LetterTile tile)> tilesToDestroy = new();
         foreach ((int col, int row) in selectedTiles)
         {
             LetterTile tileToDestroy = letterTiles[col][row];
@@ -240,13 +245,7 @@ public class GameManager : MonoBehaviour
                 {
                     // need to create a new tile
                     LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                    if (Random.value < levelManager.Heat)
-                    {
-                        newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Fire);
-                    } else
-                    {
-                        newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
-                    }
+                    newTile.Initialize(NextLetter(), i, j, GetNextTileType(levelManager.Heat, score));
                     letterTiles[i].Add(newTile);
                 }
                 else
@@ -257,6 +256,47 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Helper to get a random tile given current heat and previous move's score
+    /// </summary>
+    /// <param name="heat">Current heat given by LevelManager</param>
+    /// <param name="score">Score of the previous move</param>
+    /// <returns></returns>
+    private LetterTile.TileType GetNextTileType(float heat, float score)
+    {
+        float baseProbability = Mathf.Min(bonusTileA * score + bonusTileB, bonusTileMax);
+        float bonusProbability = baseProbability * bonusTileTypeProbabilityMultipliers[0];
+        float goldProbability = baseProbability * bonusTileTypeProbabilityMultipliers[1];
+        float diamondProbability = baseProbability * bonusTileTypeProbabilityMultipliers[2];
+
+        float rand = Random.value;
+
+        Debug.Log($"base {baseProbability} bonus {bonusProbability} gold {goldProbability} diamond {diamondProbability} heat {heat} rand {rand}");
+
+        if (rand < diamondProbability)
+        {
+            Debug.Log("returning diamond");
+            return LetterTile.TileType.Diamond;
+        }
+        else if (rand < goldProbability)
+        {
+            Debug.Log("returning gold");
+            return LetterTile.TileType.Gold;
+        }
+        else if (rand < bonusProbability)
+        {
+            Debug.Log("returning bonus");
+            return LetterTile.TileType.Bonus;
+        }
+        else if (rand < heat)
+        {
+            Debug.Log("returning fire");
+            return LetterTile.TileType.Fire;
+        }
+        Debug.Log("returning normal");
+        return LetterTile.TileType.Normal;
     }
 
     /// <summary>
