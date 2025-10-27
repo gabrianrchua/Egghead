@@ -1,0 +1,10 @@
+todo:
+
+- increase probability of vowels
+- fire tile goes down each turn
+- lose game if fire tile reaches bottom
+- shuffle
+- menu
+- volume
+- music
+- sound effects
