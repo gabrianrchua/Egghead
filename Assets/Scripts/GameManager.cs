@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using static CSVReader;
 using System.Text;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,13 +19,16 @@ public class GameManager : MonoBehaviour
 
     private Dictionary<LetterTile.TileType, float> tileTypeMultipliersDict;
     private List<LetterTile>[] letterTiles;
-    private List<(int col, int row)> selectedTiles;
+    private List<TilePos> selectedTiles;
+    private bool isAnimating;
+    private float previousMoveScore;
 
     private const float letterBaseYOdd = -4.5f;
     private const float letterBaseYEven = -4f;
     private const float letterDeltaY = 0.8f;
     private const float letterBaseX = -2.38f;
     private const float letterDeltaX = 0.8f;
+    private const float tileDropAnimationDuration = 0.5f;
 
     private void Awake()
     {
@@ -57,7 +61,7 @@ public class GameManager : MonoBehaviour
 
         // initialize lettertiles
         letterTiles = new List<LetterTile>[7];
-        selectedTiles = new List<(int col, int row)>();
+        selectedTiles = new List<TilePos>();
         for (int i = 0; i < letterTiles.Length; i++)
         {
             List<LetterTile> current = new List<LetterTile>();
@@ -107,15 +111,18 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Each <c>LetterTile</c> will call this when they are clicked.
+    /// Each <c>LetterTile</c> will call this when it is clicked.
     /// The appropriate action will be taken (e.g. activate tile, accept word...)
     /// </summary>
-    /// <param name="column">Column (x) outer index</param>
-    /// <param name="row">Row (y) inner index</param>
-    public void OnTileClick(int column, int row)
+    /// <param name="position">Position of the tile</param>
+    public void OnTileClick(TilePos position)
     {
+        (int column, int row) = position;
+
+        if (isAnimating) return;
+
         // if tile clicked is in the selected tiles list
-        int index = selectedTiles.IndexOf((column, row));
+        int index = selectedTiles.IndexOf(new TilePos(column, row));
         if (index != -1)
         {
             if (index == selectedTiles.Count - 1)
@@ -146,38 +153,38 @@ public class GameManager : MonoBehaviour
                 // deselect all after it
                 for (int i = index; i < selectedTiles.Count; i++)
                 {
-                    (int col, int row) coordToDeselect = selectedTiles[i];
-                    letterTiles[coordToDeselect.col][coordToDeselect.row].SetIsSelected(false);
+                    TilePos coordToDeselect = selectedTiles[i];
+                    letterTiles[coordToDeselect.Column][coordToDeselect.Row].SetIsSelected(false);
                 }
                 selectedTiles.RemoveRange(index, selectedTiles.Count - index);
 
                 // then, readd the selected tile
                 letterTiles[column][row].SetIsSelected(true);
-                selectedTiles.Add((column, row));
+                selectedTiles.Add(new TilePos(column, row));
             }
         }
         else if (selectedTiles.Count == 0)
         {
             // if the tile clicked is not selected
             // start new word if no selected tiles yet
-            selectedTiles.Add((column, row));
+            selectedTiles.Add(new TilePos(column, row));
             letterTiles[column][row].SetIsSelected(true);
         }
         else
         {
             // else, add to selected tiles if adjacent
-            (int col, int row) mostRecentTile = selectedTiles[^1];
-            if (AreTilesAdjacent(mostRecentTile.col, mostRecentTile.row, column, row))
+            TilePos mostRecentTile = selectedTiles[^1];
+            if (AreTilesAdjacent(mostRecentTile.Column, mostRecentTile.Row, column, row))
             {
                 letterTiles[column][row].SetIsSelected(true);
-                selectedTiles.Add((column, row));
+                selectedTiles.Add(new TilePos(column, row));
             }
             else
             {
                 // else, clear selected
-                foreach ((int col, int row) tile in selectedTiles)
+                foreach (TilePos tile in selectedTiles)
                 {
-                    letterTiles[tile.col][tile.row].SetIsSelected(false);
+                    letterTiles[tile.Column][tile.Row].SetIsSelected(false);
                 }
                 selectedTiles.Clear();
             }
@@ -205,6 +212,8 @@ public class GameManager : MonoBehaviour
         Debug.Log("Submitted word '" + word + "' for " + score.ToString());
 
         // increment score and display
+        previousMoveScore = score;
+
         // cache instances
         LevelManager levelManager = LevelManager.instance;
         UIManager uiManager = UIManager.instance;
@@ -216,21 +225,40 @@ public class GameManager : MonoBehaviour
         uiManager.SetCurrentWord("");
         // TODO: level up graphics
 
+        TilePos[] fireTilesCreated = DestroyTiles(selectedTiles.ToArray(), LetterTile.TileDestroyReason.Selected);
+        selectedTiles.Clear();
+
+        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
+    }
+
+    /// <summary>
+    /// Helper that safely destroys tiles in the <c>tileLocations</c> list from <c>letterTiles</c>,
+    /// then creates and initializes new tiles accordingly using <c>previousMoveScore</c>
+    /// </summary>
+    /// <param name="tileLocations">List of indices of tiles to destroy</param>
+    /// <param name="reason">Reason for tile destruction, where <c>TileDestroyReason.Selected</c> is
+    ///     because the user submitted them, and <c>TileDestroyReason.Fire</c> is because they was
+    ///     destroyed by fire</param>
+    /// <returns>List of locations of fire tiles that were created</returns>
+    private TilePos[] DestroyTiles(TilePos[] tileLocations, LetterTile.TileDestroyReason reason)
+    {
+        LevelManager levelManager = LevelManager.instance;
+
         // destroy selected tiles and spawn new ones
         List<(int col, LetterTile tile)> tilesToDestroy = new();
-        foreach ((int col, int row) in selectedTiles)
+        foreach ((int col, int row) in tileLocations)
         {
             LetterTile tileToDestroy = letterTiles[col][row];
             tilesToDestroy.Add((col, tileToDestroy));
-            tileToDestroy.DestroyTile();
+            tileToDestroy.DestroyTile(reason);
         }
         foreach ((int col, LetterTile tile) in tilesToDestroy)
         {
             letterTiles[col].Remove(tile);
         }
-        selectedTiles.Clear();
 
         // refresh board and tell new tiles their new positions
+        List<TilePos> createdFireTiles = new();
         for (int i = 0; i < letterTiles.Length; i++)
         {
             // even index should have 7 tiles, odd should have 8
@@ -245,7 +273,12 @@ public class GameManager : MonoBehaviour
                 {
                     // need to create a new tile
                     LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                    newTile.Initialize(NextLetter(), i, j, GetNextTileType(levelManager.Heat, score));
+                    LetterTile.TileType nextTileType = GetNextTileType(levelManager.Heat, previousMoveScore);
+                    if (nextTileType == LetterTile.TileType.Fire)
+                    {
+                        createdFireTiles.Add(new TilePos(i, j));
+                    }
+                    newTile.Initialize(NextLetter(), i, j, nextTileType);
                     letterTiles[i].Add(newTile);
                 }
                 else
@@ -256,6 +289,69 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+        return createdFireTiles.ToArray();
+    }
+
+    /// <summary>
+    /// Waits duration (disabling clicks), allowing animation to play
+    /// before destroying any tiles that are under a fire tile
+    /// </summary>
+    /// <param name="duration">Duration to block inputs and before destroying tiles under fire</param>
+    /// <param name="immuneFireTiles">Fire tiles that will not burn this turn
+    ///     (basically fire tires that have just been created)</param>
+    /// <returns>Nothing, <c>null</c></returns>
+    private IEnumerator WaitThenDestroyTilesUnderFire(float duration, TilePos[] immuneFireTiles)
+    {
+        // do not wait if no fire tiles are on the board
+        TilePos[] fireTiles = GetAllFireTileLocations();
+        if (fireTiles.Length == 0) yield break;
+
+        // animate, blocking clicks
+        isAnimating = true;
+        yield return new WaitForSeconds(duration);
+
+        // after waiting, destroy tiles under fire tiles
+        List<TilePos> tilesToDestroy = new();
+        List<TilePos> ignoreTiles = new(immuneFireTiles);
+        foreach ((int col, int row) in fireTiles)
+        {
+            if (row == 0)
+            {
+                // lose, the tile is at the bottom
+                // TODO: implement lose logic
+                Debug.Log("You lose!");
+                yield break;
+            }
+            // only destroy if tile below is not a fire type, and is not on the list of fire tiles to ignore
+            if (letterTiles[col][row - 1].GetTileType() != LetterTile.TileType.Fire
+                && ignoreTiles.IndexOf(new TilePos(col, row)) == -1)
+            {
+                tilesToDestroy.Add(new TilePos(col, row - 1));
+            }
+        }
+        DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
+        isAnimating = false;
+    }
+
+    /// <summary>
+    /// Helper that finds all fire tiles on the board from <c>letterTiles</c>
+    /// </summary>
+    /// <returns>An array of the indices of the fire tiles in <c>letterTiles</c></returns>
+    private TilePos[] GetAllFireTileLocations()
+    {
+        List<TilePos> fireTiles = new();
+        for (int i = 0; i < letterTiles.Length; i++)
+        {
+            for (int j = 0; j < letterTiles[i].Count; j++)
+            {
+                LetterTile tile = letterTiles[i][j];
+                if (tile.GetTileType() == LetterTile.TileType.Fire)
+                {
+                    fireTiles.Add(new TilePos(i, j));
+                }
+            }
+        }
+        return fireTiles.ToArray();
     }
 
     /// <summary>

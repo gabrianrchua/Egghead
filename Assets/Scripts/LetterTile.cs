@@ -16,7 +16,8 @@ public class LetterTile : MonoBehaviour
     [SerializeField] private GameObject goldSelectedSprite;
     [SerializeField] private GameObject diamondSprite;
     [SerializeField] private GameObject diamondSelectedSprite;
-    [SerializeField] private float dropAnimationDuration = 0.5f;
+
+    private const float dropAnimationDuration = 0.5f;
 
     private char letter;
     private TileType tileType;
@@ -31,6 +32,7 @@ public class LetterTile : MonoBehaviour
     }
 
     public enum TileType { Normal, Fire, Bonus, Gold, Diamond }
+    public enum TileDestroyReason { Selected, Fire };
 
     public void Initialize(char letter, int column, int row, TileType type)
     {
@@ -138,7 +140,7 @@ public class LetterTile : MonoBehaviour
     public void OnPointerClick()
     {
         if (isAnimating) return;
-        GameManager.instance.OnTileClick(column, row);
+        GameManager.instance.OnTileClick(new TilePos(column, row));
     }
 
     public void SetIsSelected(bool isSelected)
@@ -147,9 +149,9 @@ public class LetterTile : MonoBehaviour
         ApplySprite();
     }
 
-    public void DestroyTile()
+    public void DestroyTile(TileDestroyReason reason)
     {
-        // TODO: future: animate destruction
+        // TODO: future: animate destruction according to reason
         Destroy(gameObject);
     }
 
@@ -184,7 +186,9 @@ public class LetterTile : MonoBehaviour
         isAnimating = false;
     }
 
+#pragma warning disable IDE0051 // (Remove unused private members) Used by animation
     private void DestroyAnimator()
+#pragma warning restore IDE0051 // (Remove unused private members) Used by animation
     {
         if (TryGetComponent<Animator>(out var animator))
         {

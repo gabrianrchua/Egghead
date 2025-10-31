@@ -1,9 +1,8 @@
 todo:
 
 - increase probability of vowels
-- fire tile goes down each turn
-- lose game if fire tile reaches bottom
-- shuffle
+- implement lose game if fire tile reaches bottom
+- shuffle, not shuffling fire tiles but still advancing them
 - menu
 - volume
 - music
