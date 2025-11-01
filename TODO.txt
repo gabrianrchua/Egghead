@@ -1,8 +1,8 @@
 todo:
 
-- increase probability of vowels
+- increase probability of vowels --> make spawn logic to spawn closer to ideal probability
 - implement lose game if fire tile reaches bottom
-- shuffle, not shuffling fire tiles but still advancing them
+- shuffle, not shuffling fire tiles but still advancing them, clear all bonus type tiles
 - menu
 - volume
 - music
