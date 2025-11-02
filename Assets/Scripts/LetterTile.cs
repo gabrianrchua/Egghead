@@ -32,7 +32,7 @@ public class LetterTile : MonoBehaviour
     }
 
     public enum TileType { Normal, Fire, Bonus, Gold, Diamond }
-    public enum TileDestroyReason { Selected, Fire };
+    public enum TileDestroyReason { Selected, Fire, Shuffled };
 
     public void Initialize(char letter, int column, int row, TileType type)
     {

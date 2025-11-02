@@ -232,8 +232,32 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Clears out all tiles on board and replaces with new ones.
+    /// Keeps fire tiles, advancing them one move, and removes any bonus+ tiles.
+    /// </summary>
+    public void ShuffleTiles()
+    {
+        for (int i = 0; i < letterTiles.Length; i++)
+        {
+            for (int j = 0; j < letterTiles[i].Count; j++)
+            {
+                LetterTile tile = letterTiles[i][j];
+                if (tile.GetTileType() != LetterTile.TileType.Fire)
+                {
+                    // replace the tile with a new one
+                    tile.DestroyTile(LetterTile.TileDestroyReason.Shuffled);
+                    letterTiles[i].RemoveAt(j);
+                    letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
+                }
+            }
+        }
+        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, new TilePos[] { }));
+    }
+
+    /// <summary>
     /// Helper that safely destroys tiles in the <c>tileLocations</c> list from <c>letterTiles</c>,
-    /// then creates and initializes new tiles accordingly using <c>previousMoveScore</c>
+    /// then creates and initializes new tiles accordingly using <c>previousMoveScore</c> as part of
+    /// a standard move by the player
     /// </summary>
     /// <param name="tileLocations">List of indices of tiles to destroy</param>
     /// <param name="reason">Reason for tile destruction, where <c>TileDestroyReason.Selected</c> is
@@ -267,29 +291,58 @@ public class GameManager : MonoBehaviour
             int numInColumn = letterTiles[i].Count;
             for (int j = 0; j < numTiles; j++)
             {
-                float x = letterBaseX + (letterDeltaX * i);
-                float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
                 if (j >= numInColumn)
                 {
                     // need to create a new tile
-                    LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
                     LetterTile.TileType nextTileType = GetNextTileType(levelManager.Heat, previousMoveScore);
+                    LetterTile newTile = InstantiateNewTile(nextTileType, new TilePos(i, j));
                     if (nextTileType == LetterTile.TileType.Fire)
                     {
                         createdFireTiles.Add(new TilePos(i, j));
                     }
-                    newTile.Initialize(NextLetter(), i, j, nextTileType);
                     letterTiles[i].Add(newTile);
                 }
                 else
                 {
                     // need to tell existing tile what its position is
+                    (float x, float y) = CalculateTilePositionFromTilePos(new TilePos(i, j));
                     letterTiles[i][j].SetPosition(x, y, i, j);
                     letterTiles[i][j].SetIsSelected(false);
                 }
             }
         }
         return createdFireTiles.ToArray();
+    }
+
+    /// <summary>
+    /// Calculates x and y positions of a tile relative to <c>GameManager</c>'s transform
+    /// given its position in the board
+    /// </summary>
+    /// <param name="tilePos">The tile's position in the board</param>
+    /// <returns></returns>
+    private (float x, float y) CalculateTilePositionFromTilePos(TilePos position)
+    {
+        (int col, int row) = position;
+        float x = letterBaseX + (letterDeltaX * col);
+        float y = col % 2 == 0 ? letterBaseYEven + (letterDeltaY * row) : letterBaseYOdd + (letterDeltaY * row);
+        return (x, y);
+    }
+
+    /// <summary>
+    /// Helper to instantiate a new LetterTile and initialize it
+    /// </summary>
+    /// <param name="type">Which <c>TileType</c> this tile is</param>
+    /// <param name="position">The tile's position in the board</param>
+    /// <param name="x">The tile's x position relative to <c>GameManager</c>'s transform</param>
+    /// <param name="y">The tile's y position relative to <c>GameManager</c>'s transform</param>
+    /// <returns></returns>
+    private LetterTile InstantiateNewTile(LetterTile.TileType type, TilePos position)
+    {
+        (int col, int row) = position;
+        (float x, float y) = CalculateTilePositionFromTilePos(new TilePos(col, row));
+        LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
+        newTile.Initialize(NextLetter(), col, row, type);
+        return newTile;
     }
 
     /// <summary>
