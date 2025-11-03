@@ -1,10 +1,11 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
+[RequireComponent(typeof(Animator))]
 public class LetterTile : MonoBehaviour
 {
+    [SerializeField] private Animator animator;
     [SerializeField] private TMP_Text letterText;
     [SerializeField] private GameObject normalSprite;
     [SerializeField] private GameObject normalSelectedSprite;
@@ -151,8 +152,29 @@ public class LetterTile : MonoBehaviour
 
     public void DestroyTile(TileDestroyReason reason)
     {
-        // TODO: future: animate destruction according to reason
-        Destroy(gameObject);
+        float waitTime = 0f;
+        if (reason == TileDestroyReason.Selected)
+        {
+            // animation is 30 frames at 60fps
+            EnableAnimator();
+            animator.SetTrigger("DestroySelected");
+            waitTime = 0.5f;
+        }
+        else if (reason == TileDestroyReason.Fire)
+        {
+            // animation is 50 frames at 60fps
+            EnableAnimator();
+            animator.SetTrigger("DestroyFire");
+            waitTime = 0.84f;
+        }
+        else if (reason == TileDestroyReason.Shuffled)
+        {
+            // animation is 30 frames at 60fps
+            EnableAnimator();
+            animator.SetTrigger("DestroyShuffle");
+            waitTime = 0.5f;
+        }
+        StartCoroutine(WaitThenDestroySelf(waitTime));
     }
 
     public void SetPosition(float x, float y, int column, int row)
@@ -186,13 +208,21 @@ public class LetterTile : MonoBehaviour
         isAnimating = false;
     }
 
+    private IEnumerator WaitThenDestroySelf(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        Destroy(gameObject);
+    }
+
 #pragma warning disable IDE0051 // (Remove unused private members) Used by animation
-    private void DestroyAnimator()
+    private void DisableAnimator()
 #pragma warning restore IDE0051 // (Remove unused private members) Used by animation
     {
-        if (TryGetComponent<Animator>(out var animator))
-        {
-            Destroy(animator);
-        }
+        animator.enabled = false;
+    }
+
+    private void EnableAnimator()
+    {
+        animator.enabled = true;
     }
 }

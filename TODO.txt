@@ -1,10 +1,9 @@
 todo:
 
 - fix: overlays in ui should block clicking tiles
-- animations for each tile type destroy reason
+- fix: shuffle should guarantee add 1-2 fire tiles
 - increase probability of vowels --> make spawn logic to spawn closer to ideal probability
 - implement lose game if fire tile reaches bottom
-- shuffle, not shuffling fire tiles but still advancing them, clear all bonus type tiles
 - save game and load
 - upload save game and stats to server
 - menu
