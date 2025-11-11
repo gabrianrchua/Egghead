@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using static CSVReader;
 using System.Text;
 using System.Collections;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -64,7 +65,7 @@ public class GameManager : MonoBehaviour
         selectedTiles = new List<TilePos>();
         for (int i = 0; i < letterTiles.Length; i++)
         {
-            List<LetterTile> current = new List<LetterTile>();
+            List<LetterTile> current = new();
 
             // even index should have 7 tiles, odd should have 8
             bool isEven = i % 2 == 0;
@@ -74,7 +75,7 @@ public class GameManager : MonoBehaviour
                 float x = letterBaseX + (letterDeltaX * i);
                 float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
                 LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                newTile.Initialize(NextLetter(), i, j, LetterTile.TileType.Normal);
+                newTile.Initialize(SimpleNextLetter(), i, j, LetterTile.TileType.Normal);
                 current.Add(newTile);
             }
 
@@ -93,10 +94,58 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Randomly pick a letter according to letter probability distribution
+    /// Randomly pick a letter according to adjusted probability distribution
     /// </summary>
     /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
     private char NextLetter()
+    {
+        float[] baseWeights = csvReader.letterWeights;
+        Letter[] letters = csvReader.letterList.letters;
+
+        // build adjusted weights based on letters currently on board
+        Dictionary<char, int> boardCounts = GetBoardLetterCounts();
+        int totalBoardLetters = Mathf.Max(1, boardCounts.Values.Sum());
+
+        float[] adjustedWeights = new float[baseWeights.Length];
+        float adjustmentPower = 0.7f; // tuning parameter (0.5 – 1.0 ideal)
+
+        // Compute expected frequency proportional to base weight
+        for (int i = 0; i < letters.Length; i++)
+        {
+            char c = letters[i].letter;
+            float expectedFreq = baseWeights[i];
+            float currentFreq = boardCounts.TryGetValue(c, out int count)
+                ? (float)count / totalBoardLetters
+                : 0.0001f; // avoid division by zero
+
+            // boost underrepresented letters
+            float correction = Mathf.Pow(expectedFreq / currentFreq, adjustmentPower);
+            correction = Mathf.Clamp(correction, 0.5f, 2.0f); // avoid wild swings
+
+            adjustedWeights[i] = baseWeights[i] * correction;
+        }
+
+        float totalAdjusted = adjustedWeights.Sum();
+
+        // weighted random draw
+        float rand = Random.value * totalAdjusted;
+        float cumulative = 0;
+        for (int i = 0; i < letters.Length; i++)
+        {
+            cumulative += adjustedWeights[i];
+            if (cumulative > rand)
+                return letters[i].letter;
+        }
+
+        return letters[^1].letter; // fallback, should not happen
+    }
+
+    /// <summary>
+    /// Randomly pick a letter according to letter probability distribution
+    /// Does NOT take into account current board state, so only use when initializing board
+    /// </summary>
+    /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
+    private char SimpleNextLetter()
     {
         float rand = Random.value * csvReader.letterWeightsTotal;
 
@@ -111,6 +160,24 @@ public class GameManager : MonoBehaviour
         }
 
         return csvReader.letterList.letters[^1].letter; // should not happen
+    }
+
+    /// <summary>
+    /// Helper to count letters currently on board
+    /// </summary>
+    /// <returns>Dictionary with letter as key and number of times that letter appears as value</returns>
+    private Dictionary<char, int> GetBoardLetterCounts()
+    {
+        Dictionary<char, int> counts = new();
+        foreach (List<LetterTile> tileColumn in letterTiles)
+        {
+            foreach (LetterTile tile in tileColumn)
+            {
+                char c = tile.GetLetter();
+                counts[c] = counts.TryGetValue(c, out int count) ? count + 1 : 1;
+            }
+        }
+        return counts;
     }
 
     /// <summary>
