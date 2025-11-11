@@ -92,7 +92,10 @@ public class GameManager : MonoBehaviour
         ui.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
     }
 
-    // Randomly pick a letter according to letter probability distribution
+    /// <summary>
+    /// Randomly pick a letter according to letter probability distribution
+    /// </summary>
+    /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
     private char NextLetter()
     {
         float rand = Random.value * csvReader.letterWeightsTotal;
