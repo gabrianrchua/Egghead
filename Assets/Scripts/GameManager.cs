@@ -4,6 +4,7 @@ using static CSVReader;
 using System.Text;
 using System.Collections;
 using System.Linq;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -95,6 +96,8 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Randomly pick a letter according to adjusted probability distribution
+    /// Considers current board state <c>letterTiles</c> and boosts / reduces probability
+    /// of letters that are currently under / over represented in the board
     /// </summary>
     /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
     private char NextLetter()
@@ -304,9 +307,14 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Clears out all tiles on board and replaces with new ones.
     /// Keeps fire tiles, advancing them one move, and removes any bonus+ tiles.
+    /// Creates between one and three new fire tiles at the top of the board
     /// </summary>
     public void ShuffleTiles()
     {
+        int numFireTiles = Mathf.RoundToInt(Random.Range(1f, 3f));
+        int[] fireTileLocations = SelectPositions(letterTiles.Length, numFireTiles);
+        List<TilePos> newFireTiles = new(numFireTiles);
+
         for (int i = 0; i < letterTiles.Length; i++)
         {
             for (int j = 0; j < letterTiles[i].Count; j++)
@@ -317,11 +325,51 @@ public class GameManager : MonoBehaviour
                     // replace the tile with a new one
                     tile.DestroyTile(LetterTile.TileDestroyReason.Shuffled);
                     letterTiles[i].RemoveAt(j);
-                    letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
+
+                    // if at the top of the list and this column needs a new fire tile, spawn it
+                    bool isEven = i % 2 == 0;
+                    int numTiles = isEven ? 7 : 8;
+                    if (j == numTiles - 1 && fireTileLocations.Contains(i)) {
+                        TilePos position = new TilePos(i, j);
+                        LetterTile newTile = InstantiateNewTile(LetterTile.TileType.Fire, position);
+                        newFireTiles.Add(position);
+                        letterTiles[i].Insert(j, newTile);
+                    } else
+                    {
+                        letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
+                    }
+                    
                 }
             }
         }
-        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, new TilePos[] { }));
+        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, newFireTiles.ToArray()));
+    }
+
+    /// <summary>
+    /// Helper to pick <c>n</c> distinct random positions in the range <c>[0, arrayLength?1]</c>
+    /// </summary>
+    /// <param name="arrayLength">The length of the array</param>
+    /// <param name="n">Number of positions to pick (must be <= arrayLength)</param>
+    /// <returns><c>int</c> array containing the chosen indices</returns>
+    private int[] SelectPositions(int arrayLength, int n)
+    {
+        if (n < 0 || n > arrayLength)
+            throw new System.ArgumentException("n must be between 0 and arrayLength");
+
+        // Fisher-Yates shuffle (fast and deterministic)
+        int[] indices = new int[arrayLength];
+        for (int i = 0; i < arrayLength; i++)
+            indices[i] = i;
+
+        for (int i = 0; i < n; i++)
+        {
+            int r = Random.Range(i, arrayLength); // inclusive lower, exclusive upper
+            (indices[r], indices[i]) = (indices[i], indices[r]); // swap indices[i] and indices[r]
+        }
+
+        int[] result = new int[n];
+        System.Array.Copy(indices, result, n);
+        return result;
     }
 
     /// <summary>
