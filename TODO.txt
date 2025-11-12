@@ -1,10 +1,18 @@
 todo:
 
-- fix: overlays in ui should block clicking tiles
-- fix: lower likelihood of bonus tiles
 - implement lose game if fire tile reaches bottom
 - save game and load
 - upload save game and stats to server
 - menu functionality
-- volume and music
-- sound effects
+	- volume adjustment and apply, save
+- create music
+	- classic
+	- arcade
+	- zen
+- create sound effects
+	- tile clinking
+	- tile selected, all types
+	- tile submitted
+	- tile burned
+	- valid word hovered
+	- shuffle

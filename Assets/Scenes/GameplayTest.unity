@@ -4347,10 +4347,10 @@ MonoBehaviour:
   - 2
   bonusTileTypeProbabilityMultipliers:
   - 1
-  - 0.5
-  - 0.25
+  - 0.3
+  - 0.1
   bonusTileA: 0.0005
-  bonusTileB: 0
+  bonusTileB: -0.2
   bonusTileMax: 0.5
 --- !u!114 &1114713379
 MonoBehaviour:
