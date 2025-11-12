@@ -13,6 +13,8 @@ public class UIManager : MonoBehaviour
 
     public static UIManager instance;
 
+    public bool IsOverlayActive { get; private set; }
+
     private void Awake()
     {
         if (instance != null)
@@ -50,5 +52,15 @@ public class UIManager : MonoBehaviour
     public void SetLevel(int level)
     {
         levelText.text = "LVL\n" + level.ToString();
+    }
+
+    public void BlockTaps()
+    {
+        IsOverlayActive = true;
+    }
+
+    public void UnblockTaps()
+    {
+        IsOverlayActive = false;
     }
 }

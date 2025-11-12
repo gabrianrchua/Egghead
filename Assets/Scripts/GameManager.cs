@@ -190,9 +190,10 @@ public class GameManager : MonoBehaviour
     /// <param name="position">Position of the tile</param>
     public void OnTileClick(TilePos position)
     {
-        (int column, int row) = position;
+        // do not proceed if animating or overlay is blocking taps
+        if (isAnimating || UIManager.instance.IsOverlayActive) return;
 
-        if (isAnimating) return;
+        (int column, int row) = position;
 
         // if tile clicked is in the selected tiles list
         int index = selectedTiles.IndexOf(new TilePos(column, row));
@@ -312,7 +313,7 @@ public class GameManager : MonoBehaviour
     public void ShuffleTiles()
     {
         int numFireTiles = Mathf.RoundToInt(Random.Range(1f, 3f));
-        int[] fireTileLocations = SelectPositions(letterTiles.Length, numFireTiles);
+        int[] fireTileLocations = SelectArrayPositions(letterTiles.Length, numFireTiles);
         List<TilePos> newFireTiles = new(numFireTiles);
 
         for (int i = 0; i < letterTiles.Length; i++)
@@ -330,10 +331,9 @@ public class GameManager : MonoBehaviour
                     bool isEven = i % 2 == 0;
                     int numTiles = isEven ? 7 : 8;
                     if (j == numTiles - 1 && fireTileLocations.Contains(i)) {
-                        TilePos position = new TilePos(i, j);
-                        LetterTile newTile = InstantiateNewTile(LetterTile.TileType.Fire, position);
+                        TilePos position = new(i, j);
                         newFireTiles.Add(position);
-                        letterTiles[i].Insert(j, newTile);
+                        letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Fire, position));
                     } else
                     {
                         letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
@@ -351,7 +351,7 @@ public class GameManager : MonoBehaviour
     /// <param name="arrayLength">The length of the array</param>
     /// <param name="n">Number of positions to pick (must be <= arrayLength)</param>
     /// <returns><c>int</c> array containing the chosen indices</returns>
-    private int[] SelectPositions(int arrayLength, int n)
+    private int[] SelectArrayPositions(int arrayLength, int n)
     {
         if (n < 0 || n > arrayLength)
             throw new System.ArgumentException("n must be between 0 and arrayLength");

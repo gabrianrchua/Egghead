@@ -5,7 +5,6 @@ todo:
 - implement lose game if fire tile reaches bottom
 - save game and load
 - upload save game and stats to server
-- menu
-- volume
-- music
+- menu functionality
+- volume and music
 - sound effects
