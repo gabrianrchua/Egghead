@@ -53,9 +53,9 @@ public class SaveManager : Singleton<SaveManager>
     }
 
     /// <summary>
-    /// Sign in the player anonymously
+    /// Sign up a new anonymous player
     /// </summary>
-    async Task SignUpAnonymouslyAsync()
+    public async Task SignUpAnonymouslyAsync()
     {
         try
         {
@@ -80,7 +80,39 @@ public class SaveManager : Singleton<SaveManager>
         }
     }
 
-    async Task SignInCachedUserAsync()
+    /// <summary>
+    /// Sign in an existing player. This will also refresh a username/password user
+    /// </summary>
+    private async Task SignInAnonymouslyAsync()
+    {
+        // Sign in Anonymously
+        // This call will sign in the cached player.
+        try
+        {
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            Debug.Log("Sign in anonymously succeeded!");
+
+            // Shows how to get the playerID
+            Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
+        }
+        catch (AuthenticationException ex)
+        {
+            // Compare error code to AuthenticationErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+        catch (RequestFailedException ex)
+        {
+            // Compare error code to CommonErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+    }
+
+    /// <summary>
+    /// Sign in an existing cached user
+    /// </summary>
+    public async Task SignInCachedUserAsync()
     {
         // Check if a cached player already exists by checking if the session token exists
         if (!AuthenticationService.Instance.SessionTokenExists)
@@ -89,7 +121,61 @@ public class SaveManager : Singleton<SaveManager>
             return;
         }
 
-        // Else, sign in as a new anonymous user
-        await SignUpAnonymouslyAsync();
+        // Else, re/sign in
+        await SignInAnonymouslyAsync();
+    }
+
+    /// <summary>
+    /// Sign in the user using a username and password.
+    /// See <a href="https://docs.unity.com/ugs/en-us/manual/authentication/manual/platform-signin-username-password">Unity documentation on username/password requirements</a>
+    /// </summary>
+    /// <param name="username">Username string</param>
+    /// <param name="password">Password string</param>
+    public async Task SignInWithUsernamePasswordAsync(string username, string password)
+    {
+        try
+        {
+            await AuthenticationService.Instance.SignInWithUsernamePasswordAsync(username, password);
+            Debug.Log("SignIn is successful.");
+        }
+        catch (AuthenticationException ex)
+        {
+            // Compare error code to AuthenticationErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+        catch (RequestFailedException ex)
+        {
+            // Compare error code to CommonErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+    }
+
+    /// <summary>
+    /// Add a username/password sign in option for an anonymously signed in user.
+    /// See <a href="https://docs.unity.com/ugs/en-us/manual/authentication/manual/platform-signin-username-password">Unity documentation on username/password requirements</a>
+    /// </summary>
+    /// <param name="username">Username string</param>
+    /// <param name="password">Password string</param>
+    public async Task AddUsernamePasswordAsync(string username, string password)
+    {
+        try
+        {
+            await AuthenticationService.Instance.AddUsernamePasswordAsync(username, password);
+            Debug.Log("Username and password added.");
+        }
+        catch (AuthenticationException ex)
+        {
+            // Compare error code to AuthenticationErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+        catch (RequestFailedException ex)
+        {
+            // Compare error code to CommonErrorCodes
+            // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
     }
 }
