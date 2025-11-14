@@ -4,9 +4,8 @@ using static CSVReader;
 using System.Text;
 using System.Collections;
 using System.Linq;
-using UnityEngine.UIElements;
 
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private CSVReader csvReader;
     [SerializeField] private LetterTile letterTilePrefab;
@@ -16,8 +15,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float bonusTileA = 0.0005f;
     [SerializeField] private float bonusTileB = -0.2f;
     [SerializeField] private float bonusTileMax = 0.5f;
-
-    public static GameManager instance;
 
     private Dictionary<LetterTile.TileType, float> tileTypeMultipliersDict;
     private List<LetterTile>[] letterTiles;
@@ -31,17 +28,6 @@ public class GameManager : MonoBehaviour
     private const float letterBaseX = -2.38f;
     private const float letterDeltaX = 0.8f;
     private const float tileDropAnimationDuration = 0.5f;
-
-    private void Awake()
-    {
-        if (instance != null)
-        {
-            Debug.LogWarning("More than one GameManager in the scene! This one will be disabled.");
-            enabled = false;
-            return;
-        }
-        instance = this;
-    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
@@ -85,8 +71,8 @@ public class GameManager : MonoBehaviour
 
         // initialize UI
         // TODO: load saved game from disk
-        UIManager ui = UIManager.instance;
-        LevelManager levelManager = LevelManager.instance;
+        UIManager ui = UIManager.Instance;
+        LevelManager levelManager = LevelManager.Instance;
 
         ui.ClearCurrentWordScore();
         ui.SetCurrentWord("");
@@ -191,7 +177,7 @@ public class GameManager : MonoBehaviour
     public void OnTileClick(TilePos position)
     {
         // do not proceed if animating or overlay is blocking taps
-        if (isAnimating || UIManager.instance.IsOverlayActive) return;
+        if (isAnimating || UIManager.Instance.IsOverlayActive) return;
 
         (int column, int row) = position;
 
@@ -266,14 +252,14 @@ public class GameManager : MonoBehaviour
 
         // update word UI
         (string word, int score) = GetCurrentWord();
-        UIManager.instance.SetCurrentWord(word);
+        UIManager.Instance.SetCurrentWord(word);
         if (score == -1)
         {
-            UIManager.instance.ClearCurrentWordScore();
+            UIManager.Instance.ClearCurrentWordScore();
         }
         else
         {
-            UIManager.instance.SetCurrentWordScore(score);
+            UIManager.Instance.SetCurrentWordScore(score);
         }
     }
 
@@ -289,8 +275,8 @@ public class GameManager : MonoBehaviour
         previousMoveScore = score;
 
         // cache instances
-        LevelManager levelManager = LevelManager.instance;
-        UIManager uiManager = UIManager.instance;
+        LevelManager levelManager = LevelManager.Instance;
+        UIManager uiManager = UIManager.Instance;
 
         levelManager.AddScore(score);
         uiManager.SetLevel(levelManager.Level);
@@ -384,7 +370,7 @@ public class GameManager : MonoBehaviour
     /// <returns>List of locations of fire tiles that were created</returns>
     private TilePos[] DestroyTiles(TilePos[] tileLocations, LetterTile.TileDestroyReason reason)
     {
-        LevelManager levelManager = LevelManager.instance;
+        LevelManager levelManager = LevelManager.Instance;
 
         // destroy selected tiles and spawn new ones
         List<(int col, LetterTile tile)> tilesToDestroy = new();

@@ -3,10 +3,12 @@ using Unity.Services.Core;
 using Unity.Services.Authentication;
 using System.Threading.Tasks;
 
-public class SaveManager : MonoBehaviour
+public class SaveManager : Singleton<SaveManager>
 {
-    private async void Awake()
+    private new async void Awake()
     {
+        base.Awake();
+
         try
         {
             await UnityServices.InitializeAsync();

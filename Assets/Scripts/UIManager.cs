@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIManager : MonoBehaviour
+public class UIManager : Singleton<UIManager>
 {
     [SerializeField] private TextMeshProUGUI currentWordText;
     [SerializeField] private TextMeshProUGUI currentWordScore;
@@ -11,20 +11,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Slider levelScoreSlider;
     [SerializeField] private GameObject validWordBackground;
 
-    public static UIManager instance;
-
     public bool IsOverlayActive { get; private set; }
-
-    private void Awake()
-    {
-        if (instance != null)
-        {
-            Debug.LogWarning("More than one UIManager in the scene. Disabling this one");
-            enabled = false;
-            return;
-        }
-        instance = this;
-    }
 
     public void SetCurrentWord(string word)
     {

@@ -141,7 +141,7 @@ public class LetterTile : MonoBehaviour
     public void OnPointerClick()
     {
         if (isAnimating) return;
-        GameManager.instance.OnTileClick(new TilePos(column, row));
+        GameManager.Instance.OnTileClick(new TilePos(column, row));
     }
 
     public void SetIsSelected(bool isSelected)

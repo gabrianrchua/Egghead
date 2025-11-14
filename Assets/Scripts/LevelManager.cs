@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class LevelManager : MonoBehaviour
+public class LevelManager : Singleton<LevelManager>
 {
     // levelScore multiplier = ax^2 + bx + c
     [SerializeField] private float levelScoreA = 500f;
@@ -39,21 +39,11 @@ public class LevelManager : MonoBehaviour
             return (float)currentLevelScore / LevelScoreRequirement * 100f;
         }
     }
-
-    public static LevelManager instance;
     
     private int currentLevelScore;
 
-    private void Awake()
+    private void Start()
     {
-        if (instance != null)
-        {
-            Debug.LogWarning("More than one LevelManager in the scene! This one will be disabled.");
-            enabled = false;
-            return;
-        }
-        instance = this;
-
         // TODO: load saved game from disk
         TotalScore = 0;
         Level = 1;
