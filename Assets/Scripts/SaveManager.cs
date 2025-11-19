@@ -1,10 +1,19 @@
 using UnityEngine;
 using Unity.Services.Core;
 using Unity.Services.Authentication;
+using Unity.Services.CloudSave;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class SaveManager : Singleton<SaveManager>
 {
+    public struct SaveData
+    {
+        public int Score;
+        public System.DateTime Timestamp;
+        public string LetterTileData;
+    }
+
     private new async void Awake()
     {
         base.Awake();
@@ -177,5 +186,41 @@ public class SaveManager : Singleton<SaveManager>
             // Notify the player with the proper error message
             Debug.LogException(ex);
         }
+    }
+
+    public async void SaveGame(SaveData data)
+    {
+        Dictionary<string, object> dataToSave = new()
+        {
+            { "score", data.Score },
+            { "tiles", data.LetterTileData },
+            { "timestamp", data.Timestamp.Ticks }
+        };
+
+        await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+    }
+
+    public async Task<SaveData> LoadGame()
+    {
+        Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
+            await CloudSaveService.Instance.Data.Player.LoadAsync(
+                new HashSet<string> { "score", "tiles", "timestamp" }
+            );
+
+        SaveData data = new();
+        if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
+        {
+            data.Score = score.Value.GetAs<int>();
+            data.LetterTileData = tiles.Value.GetAs<string>();
+            data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
+        }
+        else
+        {
+            Debug.LogWarning("Tried to load save data but one or more keys were not present!");
+            Debug.LogWarning(playerData.Keys);
+            throw new System.Exception("Save data invalid");
+        }
+
+        return data;
     }
 }
