@@ -39,7 +39,7 @@ public class LevelManager : Singleton<LevelManager>
             return (float)currentLevelScore / LevelScoreRequirement * 100f;
         }
     }
-    
+
     private int currentLevelScore;
 
     private void Start()
@@ -51,20 +51,25 @@ public class LevelManager : Singleton<LevelManager>
     }
 
     /// <summary>
-    /// Add score to current score, incrementing current level score and progress
+    /// Add score to current score, incrementing current level score and progress.
+    /// Can handle multiple level ups.
     /// </summary>
     /// <param name="amount">Amount to increase score</param>
-    /// <returns><c>true</c> if levelled up as a result, else <c>false</c></returns>
+    /// <returns><c>true</c> if at least one level?up occurred, otherwise <c>false</c></returns>
     public bool AddScore(int amount)
     {
+        bool leveledUp = false;
+
         TotalScore += amount;
         currentLevelScore += amount;
-        if (currentLevelScore >= LevelScoreRequirement)
+
+        while (currentLevelScore >= LevelScoreRequirement)
         {
             currentLevelScore -= LevelScoreRequirement;
             Level++;
-            return true;
+            leveledUp = true;
         }
-        return false;
+
+        return leveledUp;
     }
 }
