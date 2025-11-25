@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 public class SaveManager : Singleton<SaveManager>
 {
+    [System.Serializable]
     public struct SaveData
     {
         public int Score;
@@ -59,6 +60,15 @@ public class SaveManager : Singleton<SaveManager>
         {
             Debug.Log("Player session could not be refreshed and expired.");
         };
+    }
+
+    /// <summary>
+    /// Helper to get the persistent save file path
+    /// </summary>
+    /// <returns></returns>
+    private string GetSaveFilePath()
+    {
+        return System.IO.Path.Combine(Application.persistentDataPath, "save.json");
     }
 
     /// <summary>
@@ -197,30 +207,69 @@ public class SaveManager : Singleton<SaveManager>
             { "timestamp", data.Timestamp.Ticks }
         };
 
-        await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+        // save to local file
+        string json = JsonUtility.ToJson(data);
+        try
+        {
+            System.IO.File.WriteAllText(GetSaveFilePath(), json);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to save game data to local file: " + ex.Message);
+        }
+
+        // save to cloud
+        try
+        {
+            await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to save game data to CloudSave: " + ex.Message);
+        }
     }
 
     public async Task<SaveData> LoadGame()
     {
-        Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
-            await CloudSaveService.Instance.Data.Player.LoadAsync(
-                new HashSet<string> { "score", "tiles", "timestamp" }
-            );
-
-        SaveData data = new();
-        if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
+        // TODO: cache save on load so we don't fetch multiple times
+        try
         {
-            data.Score = score.Value.GetAs<int>();
-            data.LetterTileData = tiles.Value.GetAs<string>();
-            data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
-        }
-        else
-        {
-            Debug.LogWarning("Tried to load save data but one or more keys were not present!");
-            Debug.LogWarning(playerData.Keys);
-            throw new System.Exception("Save data invalid");
-        }
+            Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
+                await CloudSaveService.Instance.Data.Player.LoadAsync(
+                    new HashSet<string> { "score", "tiles", "timestamp" }
+                );
 
-        return data;
+            SaveData data = new();
+            if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
+            {
+                data.Score = score.Value.GetAs<int>();
+                data.LetterTileData = tiles.Value.GetAs<string>();
+                data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
+            }
+            else
+            {
+                Debug.LogWarning("Tried to load save data but one or more keys were not present!");
+                Debug.LogWarning(playerData.Keys);
+                throw new System.Exception("Save data invalid");
+            }
+
+            return data;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to load game data from CloudSave: " + ex.Message + "; falling back to local file");
+
+            try
+            {
+                string json = System.IO.File.ReadAllText(GetSaveFilePath());
+                SaveData data = JsonUtility.FromJson<SaveData>(json);
+                return data;
+            }
+            catch (System.Exception ex2)
+            {
+                Debug.LogError("Failed to load game from local file: " + ex2.Message);
+                return new SaveData();
+            }
+        }
     }
 }
