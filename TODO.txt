@@ -1,14 +1,21 @@
 todo:
 
+=== p1
 - implement lose game if fire tile reaches bottom
-- save game and load
-- upload save game and stats to server
+	- delete save game
+- save / load
+	- periodic / after each move / after quit (?) save game
+	- parse and load game
+- log in ui
+
+=== p2
+- main menu / title screen
+- stats tracking
+	- high score
+	- time spent
+	- number of words
 - menu functionality
 	- volume adjustment and apply, save
-- create music
-	- classic
-	- arcade
-	- zen
 - create sound effects
 	- tile clinking
 	- tile selected, all types
@@ -16,3 +23,9 @@ todo:
 	- tile burned
 	- valid word hovered
 	- shuffle
+
+=== p3
+- create music
+	- classic
+	- arcade
+	- zen

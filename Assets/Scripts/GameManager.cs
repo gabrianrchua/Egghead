@@ -30,7 +30,7 @@ public class GameManager : Singleton<GameManager>
     private const float tileDropAnimationDuration = 0.5f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    private void Start()
+    private async void Start()
     {
         tileTypeMultipliersDict = new()
         {
@@ -40,6 +40,17 @@ public class GameManager : Singleton<GameManager>
             { LetterTile.TileType.Gold, bonusTileTypeScoreMultipliers[1] },
             { LetterTile.TileType.Diamond, bonusTileTypeScoreMultipliers[2] }
         };
+
+        // TODO: load saved game
+        SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+        if (data.LetterTileData == null)
+        {
+            // new game
+        }
+        else
+        {
+            // load saved game
+        }
 
         // clear children to prepare for managed lettertiles
         foreach (Transform child in transform)
@@ -70,14 +81,9 @@ public class GameManager : Singleton<GameManager>
         }
 
         // initialize UI
-        // TODO: load saved game from disk
         UIManager ui = UIManager.Instance;
-        LevelManager levelManager = LevelManager.Instance;
-
         ui.ClearCurrentWordScore();
         ui.SetCurrentWord("");
-        ui.SetLevel(levelManager.Level);
-        ui.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
     }
 
     /// <summary>
@@ -316,15 +322,17 @@ public class GameManager : Singleton<GameManager>
                     // if at the top of the list and this column needs a new fire tile, spawn it
                     bool isEven = i % 2 == 0;
                     int numTiles = isEven ? 7 : 8;
-                    if (j == numTiles - 1 && fireTileLocations.Contains(i)) {
+                    if (j == numTiles - 1 && fireTileLocations.Contains(i))
+                    {
                         TilePos position = new(i, j);
                         newFireTiles.Add(position);
                         letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Fire, position));
-                    } else
+                    }
+                    else
                     {
                         letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
                     }
-                    
+
                 }
             }
         }

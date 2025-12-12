@@ -16,6 +16,7 @@ public class SaveManager : Singleton<SaveManager>
 
         public readonly string ToPrettyString()
         {
+            // TODO: remove full LetterTileData logging
             return $"[{Timestamp.ToShortDateString()} {Timestamp.ToShortTimeString()}] {Score} {LetterTileData}";
         }
     }
@@ -76,7 +77,7 @@ public class SaveManager : Singleton<SaveManager>
     /// <returns>The persistent data path + save.json</returns>
     private string GetSaveFilePath()
     {
-        return System.IO.Path.Combine(Application.persistentDataPath, "save.json");
+        return System.IO.Path.Combine(UnityEngine.Application.persistentDataPath, "save.json");
     }
 
     /// <summary>
@@ -220,6 +221,7 @@ public class SaveManager : Singleton<SaveManager>
         try
         {
             System.IO.File.WriteAllText(GetSaveFilePath(), json);
+            Debug.Log("Saved game data to local file");
         }
         catch (System.Exception ex)
         {
@@ -230,6 +232,7 @@ public class SaveManager : Singleton<SaveManager>
         try
         {
             await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+            // TODO: remove full json logging
             Debug.Log("Saved game data to CloudSave: " + json);
         }
         catch (System.Exception ex)
@@ -295,8 +298,12 @@ public class SaveManager : Singleton<SaveManager>
             }
             catch (System.Exception ex2)
             {
-                Debug.LogError("Failed to load game from local file: " + ex2.Message);
-                return new SaveData();
+                Debug.LogError("Failed to load game from local file, returning new game data: " + ex2.Message);
+                SaveData data = new();
+                data.Score = 0;
+                data.Timestamp = System.DateTime.UtcNow;
+                data.LetterTileData = null;
+                return data;
             }
         }
     }
@@ -305,13 +312,28 @@ public class SaveManager : Singleton<SaveManager>
     {
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             await CloudSaveService.Instance.Data.Player.DeleteAsync("score");
             await CloudSaveService.Instance.Data.Player.DeleteAsync("tiles");
             await CloudSaveService.Instance.Data.Player.DeleteAsync("timestamp");
+#pragma warning restore CS0618 // Type or member is obsolete
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("Failed to delete game data: " + ex.Message);
+            Debug.LogError("Failed to delete game data from CloudSave: " + ex.Message);
+        }
+
+        try
+        {
+            string path = GetSaveFilePath();
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to delete game data from local file: " + ex.Message);
         }
     }
 }

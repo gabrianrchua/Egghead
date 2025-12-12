@@ -42,12 +42,27 @@ public class LevelManager : Singleton<LevelManager>
 
     private int currentLevelScore;
 
-    private void Start()
+    private async void Start()
     {
-        // TODO: load saved game from disk
-        TotalScore = 0;
-        Level = 1;
-        currentLevelScore = 0;
+        SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+
+        if (data.LetterTileData == null)
+        {
+            // if new game, use 0 score
+            TotalScore = 0;
+            Level = 1;
+            currentLevelScore = 0;
+        }
+        else
+        {
+            TotalScore = 0;
+            AddScore(data.Score);
+        }
+
+        // initialize UI
+        UIManager ui = UIManager.Instance;
+        ui.SetLevel(Level);
+        ui.SetCurrentScore(TotalScore, LevelPercentage);
     }
 
     /// <summary>
