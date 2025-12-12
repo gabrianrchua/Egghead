@@ -13,7 +13,15 @@ public class SaveManager : Singleton<SaveManager>
         public int Score;
         public System.DateTime Timestamp;
         public string LetterTileData;
+
+        public readonly string ToPrettyString()
+        {
+            return $"[{Timestamp.ToShortDateString()} {Timestamp.ToShortTimeString()}] {Score} {LetterTileData}";
+        }
     }
+
+    private SaveData _currentSaveData;
+    private System.DateTime _currentSaveDataExpires = default;
 
     private new async void Awake()
     {
@@ -65,7 +73,7 @@ public class SaveManager : Singleton<SaveManager>
     /// <summary>
     /// Helper to get the persistent save file path
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The persistent data path + save.json</returns>
     private string GetSaveFilePath()
     {
         return System.IO.Path.Combine(Application.persistentDataPath, "save.json");
@@ -198,7 +206,7 @@ public class SaveManager : Singleton<SaveManager>
         }
     }
 
-    public async void SaveGame(SaveData data)
+    public async Task SaveGame(SaveData data)
     {
         Dictionary<string, object> dataToSave = new()
         {
@@ -222,6 +230,7 @@ public class SaveManager : Singleton<SaveManager>
         try
         {
             await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+            Debug.Log("Saved game data to CloudSave: " + json);
         }
         catch (System.Exception ex)
         {
@@ -229,9 +238,23 @@ public class SaveManager : Singleton<SaveManager>
         }
     }
 
-    public async Task<SaveData> LoadGame()
+    /// <summary>
+    /// Get current game save data, which is cached for 5 seconds.
+    /// </summary>
+    /// <returns>Current <c>SaveData</c></returns>
+    public async Task<SaveData> GetCurrentSaveData()
     {
-        // TODO: cache save on load so we don't fetch multiple times
+        if (_currentSaveDataExpires == default || System.DateTime.UtcNow > _currentSaveDataExpires)
+        {
+            _currentSaveData = await LoadGame();
+            _currentSaveDataExpires = System.DateTime.UtcNow.AddSeconds(5d);
+        }
+
+        return _currentSaveData;
+    }
+
+    private async Task<SaveData> LoadGame()
+    {
         try
         {
             Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
@@ -253,6 +276,8 @@ public class SaveManager : Singleton<SaveManager>
                 throw new System.Exception("Save data invalid");
             }
 
+            Debug.Log("Loaded game data from CloudSave: " + data.ToPrettyString());
+
             return data;
         }
         catch (System.Exception ex)
@@ -263,6 +288,9 @@ public class SaveManager : Singleton<SaveManager>
             {
                 string json = System.IO.File.ReadAllText(GetSaveFilePath());
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+                Debug.Log("Loaded game data from local file: " + data.ToPrettyString());
+
                 return data;
             }
             catch (System.Exception ex2)
@@ -270,6 +298,20 @@ public class SaveManager : Singleton<SaveManager>
                 Debug.LogError("Failed to load game from local file: " + ex2.Message);
                 return new SaveData();
             }
+        }
+    }
+
+    public async Task DeleteData()
+    {
+        try
+        {
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("score");
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("tiles");
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("timestamp");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to delete game data: " + ex.Message);
         }
     }
 }
