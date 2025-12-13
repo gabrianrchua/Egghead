@@ -35,6 +35,21 @@ public class LetterTile : MonoBehaviour
     public enum TileType { Normal, Fire, Bonus, Gold, Diamond }
     public enum TileDestroyReason { Selected, Fire, Shuffled };
 
+    public struct LetterTileData
+    {
+        public char letter;
+        public int column;
+        public int row;
+        public int tileType;
+    }
+
+    /// <summary>
+    /// Initialize tile using raw values
+    /// </summary>
+    /// <param name="letter">Letter character</param>
+    /// <param name="column">Column (outer index)</param>
+    /// <param name="row">Row (inner index)</param>
+    /// <param name="type">Which <c>TileType</c></param>
     public void Initialize(char letter, int column, int row, TileType type)
     {
         this.letter = letter;
@@ -54,6 +69,27 @@ public class LetterTile : MonoBehaviour
         tileType = type;
         isSelected = false;
         ApplySprite();
+    }
+
+    /// <summary>
+    /// Initialize tile from JSON
+    /// </summary>
+    /// <param name="letterTileData">JSON string containing a <c>LetterTileData</c> object</param>
+    public void Initialize(string letterTileData)
+    {
+        LetterTileData data = JsonUtility.FromJson<LetterTileData>(letterTileData);
+        Initialize(data.letter, data.column, data.row, (TileType)data.tileType);
+    }
+
+    public LetterTileData ToLetterTileData()
+    {
+        return new LetterTileData()
+        {
+            letter = letter,
+            column = column,
+            row = row,
+            tileType = (int)tileType
+        };
     }
 
     /// <summary>
