@@ -41,15 +41,65 @@ public class GameManager : Singleton<GameManager>
             { LetterTile.TileType.Diamond, bonusTileTypeScoreMultipliers[2] }
         };
 
-        // TODO: load saved game
         SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
         if (data.LetterTileData == null)
         {
             // new game
+            // initialize lettertiles
+            letterTiles = new List<LetterTile>[7];
+            selectedTiles = new List<TilePos>();
+            for (int i = 0; i < letterTiles.Length; i++)
+            {
+                List<LetterTile> current = new();
+
+                // even index should have 7 tiles, odd should have 8
+                bool isEven = i % 2 == 0;
+                int numTiles = isEven ? 7 : 8;
+                for (int j = 0; j < numTiles; j++)
+                {
+                    float x = letterBaseX + (letterDeltaX * i);
+                    float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
+                    LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
+                    newTile.Initialize(SimpleNextLetter(), i, j, LetterTile.TileType.Normal);
+                    current.Add(newTile);
+                }
+
+                letterTiles[i] = current;
+            }
         }
         else
         {
             // load saved game
+            LetterTile.LetterTileData[][] tileData = JsonUtility.FromJson<LetterTile.LetterTileData[][]>(data.LetterTileData);
+
+            // initialize lettertiles
+            letterTiles = new List<LetterTile>[7];
+            selectedTiles = new List<TilePos>();
+            for (int i = 0; i < letterTiles.Length; i++)
+            {
+                List<LetterTile> current = new();
+
+                // even index should have 7 tiles, odd should have 8
+                bool isEven = i % 2 == 0;
+                int numTiles = isEven ? 7 : 8;
+                for (int j = 0; j < numTiles; j++)
+                {
+                    float x = letterBaseX + (letterDeltaX * i);
+                    float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
+                    LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
+                    LetterTile.LetterTileData currentTileData = tileData[i][j];
+                    if (i != currentTileData.column || j != currentTileData.row)
+                    {
+                        // note: ignoring tileData column and row for now
+                        // TODO: upon save data error, fall back to new game
+                        Debug.LogWarning($"Save data misalignment! Expected i={i} j={j} but got column={currentTileData.column} row={currentTileData.row}");
+                    }
+                    newTile.Initialize(currentTileData.letter, i, j, (LetterTile.TileType)currentTileData.tileType);
+                    current.Add(newTile);
+                }
+
+                letterTiles[i] = current;
+            }
         }
 
         // clear children to prepare for managed lettertiles
@@ -58,32 +108,32 @@ public class GameManager : Singleton<GameManager>
             Destroy(child.gameObject);
         }
 
-        // initialize lettertiles
-        letterTiles = new List<LetterTile>[7];
-        selectedTiles = new List<TilePos>();
-        for (int i = 0; i < letterTiles.Length; i++)
-        {
-            List<LetterTile> current = new();
-
-            // even index should have 7 tiles, odd should have 8
-            bool isEven = i % 2 == 0;
-            int numTiles = isEven ? 7 : 8;
-            for (int j = 0; j < numTiles; j++)
-            {
-                float x = letterBaseX + (letterDeltaX * i);
-                float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
-                LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                newTile.Initialize(SimpleNextLetter(), i, j, LetterTile.TileType.Normal);
-                current.Add(newTile);
-            }
-
-            letterTiles[i] = current;
-        }
-
         // initialize UI
         UIManager ui = UIManager.Instance;
         ui.ClearCurrentWordScore();
         ui.SetCurrentWord("");
+    }
+
+    /// <summary>
+    /// Export <c>letterTiles</c> as <c>LetterTile.LetterTileData[][]</c> jagged array for
+    /// the purpose of saving
+    /// </summary>
+    /// <returns>Jagged array of <c>LetterTileData</c> representation of the current board</returns>
+    public LetterTile.LetterTileData[][] GetLetterTileData()
+    {
+        LetterTile.LetterTileData[][] data = new LetterTile.LetterTileData[letterTiles.Length][];
+
+        for (int i = 0; i < letterTiles.Length; i++)
+        {
+            List<LetterTile.LetterTileData> column = new();
+            for (int j = 0; j < letterTiles[i].Count; j++)
+            {
+                column.Add(letterTiles[i][j].ToLetterTileData());
+            }
+            data[i] = column.ToArray();
+        }
+
+        return data;
     }
 
     /// <summary>
