@@ -4,6 +4,7 @@ using static CSVReader;
 using System.Text;
 using System.Collections;
 using System.Linq;
+using System.Threading.Tasks;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -41,13 +42,27 @@ public class GameManager : Singleton<GameManager>
             { LetterTile.TileType.Diamond, bonusTileTypeScoreMultipliers[2] }
         };
 
+        // initialize lettertiles
+        letterTiles = new List<LetterTile>[7];
+        selectedTiles = new List<TilePos>();
+
+        // clear children to prepare for managed lettertiles
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // initialize UI
+        UIManager ui = UIManager.Instance;
+        ui.ClearCurrentWordScore();
+        ui.SetCurrentWord("");
+
+        // load saved game or create new game depending on save data
         SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
         if (data.LetterTileData == null)
         {
+            Debug.Log("Initializing as new game");
             // new game
-            // initialize lettertiles
-            letterTiles = new List<LetterTile>[7];
-            selectedTiles = new List<TilePos>();
             for (int i = 0; i < letterTiles.Length; i++)
             {
                 List<LetterTile> current = new();
@@ -69,12 +84,9 @@ public class GameManager : Singleton<GameManager>
         }
         else
         {
+            Debug.Log("Initializing as saved game");
             // load saved game
             LetterTile.LetterTileData[][] tileData = JsonUtility.FromJson<LetterTile.LetterTileData[][]>(data.LetterTileData);
-
-            // initialize lettertiles
-            letterTiles = new List<LetterTile>[7];
-            selectedTiles = new List<TilePos>();
             for (int i = 0; i < letterTiles.Length; i++)
             {
                 List<LetterTile> current = new();
@@ -101,17 +113,17 @@ public class GameManager : Singleton<GameManager>
                 letterTiles[i] = current;
             }
         }
+    }
 
-        // clear children to prepare for managed lettertiles
-        foreach (Transform child in transform)
+    private async Task SaveGame()
+    {
+        SaveManager.SaveData saveData = new()
         {
-            Destroy(child.gameObject);
-        }
-
-        // initialize UI
-        UIManager ui = UIManager.Instance;
-        ui.ClearCurrentWordScore();
-        ui.SetCurrentWord("");
+            Score = LevelManager.Instance.TotalScore,
+            Timestamp = System.DateTime.UtcNow,
+            LetterTileData = JsonUtility.ToJson(GetLetterTileData())
+        };
+        await SaveManager.Instance.SaveGame(saveData);
     }
 
     /// <summary>
@@ -345,6 +357,9 @@ public class GameManager : Singleton<GameManager>
         selectedTiles.Clear();
 
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
+
+        // async; but we don't care about when it finishes
+        _ = SaveGame();
     }
 
     /// <summary>

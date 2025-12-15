@@ -23,13 +23,21 @@ public class SaveManager : Singleton<SaveManager>
 
     private SaveData _currentSaveData;
     private System.DateTime _currentSaveDataExpires = default;
+    private Task _initializationTask;
 
-    private new async void Awake()
+    protected override void Awake()
     {
         base.Awake();
 
+        // kick off and save initialization task, but don't block execution
+        _initializationTask = Initialize();
+    }
+
+    private async Task Initialize()
+    {
         try
         {
+            Debug.Log("Initializing UnityServices");
             await UnityServices.InitializeAsync();
         }
         catch (System.Exception e)
@@ -38,6 +46,8 @@ public class SaveManager : Singleton<SaveManager>
         }
 
         SetupEvents();
+
+        await SignInCachedUserAsync();
     }
 
     /// <summary>
@@ -142,6 +152,7 @@ public class SaveManager : Singleton<SaveManager>
     /// </summary>
     public async Task SignInCachedUserAsync()
     {
+        Debug.Log("SignInCachedUserAsync");
         // Check if a cached player already exists by checking if the session token exists
         if (!AuthenticationService.Instance.SessionTokenExists)
         {
@@ -250,6 +261,7 @@ public class SaveManager : Singleton<SaveManager>
         if (_currentSaveDataExpires == default || System.DateTime.UtcNow > _currentSaveDataExpires)
         {
             _currentSaveData = await LoadGame();
+            // expire in 5 seconds
             _currentSaveDataExpires = System.DateTime.UtcNow.AddSeconds(5d);
         }
 
@@ -258,6 +270,9 @@ public class SaveManager : Singleton<SaveManager>
 
     private async Task<SaveData> LoadGame()
     {
+        // wait for sign in before continuing to load game
+        await _initializationTask;
+
         try
         {
             Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
@@ -299,10 +314,12 @@ public class SaveManager : Singleton<SaveManager>
             catch (System.Exception ex2)
             {
                 Debug.LogError("Failed to load game from local file, returning new game data: " + ex2.Message);
-                SaveData data = new();
-                data.Score = 0;
-                data.Timestamp = System.DateTime.UtcNow;
-                data.LetterTileData = null;
+                SaveData data = new()
+                {
+                    Score = 0,
+                    Timestamp = System.DateTime.UtcNow,
+                    LetterTileData = null
+                };
                 return data;
             }
         }

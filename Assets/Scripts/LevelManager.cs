@@ -56,6 +56,7 @@ public class LevelManager : Singleton<LevelManager>
         else
         {
             TotalScore = 0;
+            // adding the saved score value will also increment level + other values appropriately
             AddScore(data.Score);
         }
 
