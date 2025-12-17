@@ -71,16 +71,6 @@ public class LetterTile : MonoBehaviour
         ApplySprite();
     }
 
-    /// <summary>
-    /// Initialize tile from JSON
-    /// </summary>
-    /// <param name="letterTileData">JSON string containing a <c>LetterTileData</c> object</param>
-    public void Initialize(string letterTileData)
-    {
-        LetterTileData data = JsonUtility.FromJson<LetterTileData>(letterTileData);
-        Initialize(data.letter, data.column, data.row, (TileType)data.tileType);
-    }
-
     public LetterTileData ToLetterTileData()
     {
         return new LetterTileData()

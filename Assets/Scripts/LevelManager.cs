@@ -46,16 +46,11 @@ public class LevelManager : Singleton<LevelManager>
     {
         SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
 
-        if (data.LetterTileData == null)
+        TotalScore = 0;
+        Level = 1;
+        currentLevelScore = 0;
+        if (data.LetterTileData != null)
         {
-            // if new game, use 0 score
-            TotalScore = 0;
-            Level = 1;
-            currentLevelScore = 0;
-        }
-        else
-        {
-            TotalScore = 0;
             // adding the saved score value will also increment level + other values appropriately
             AddScore(data.Score);
         }

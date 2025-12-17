@@ -5,6 +5,7 @@ using System.Text;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -86,7 +87,7 @@ public class GameManager : Singleton<GameManager>
         {
             Debug.Log("Initializing as saved game");
             // load saved game
-            LetterTile.LetterTileData[][] tileData = JsonUtility.FromJson<LetterTile.LetterTileData[][]>(data.LetterTileData);
+            LetterTile.LetterTileData[][] tileData = JsonConvert.DeserializeObject<LetterTile.LetterTileData[][]>(data.LetterTileData);
             for (int i = 0; i < letterTiles.Length; i++)
             {
                 List<LetterTile> current = new();
@@ -121,7 +122,7 @@ public class GameManager : Singleton<GameManager>
         {
             Score = LevelManager.Instance.TotalScore,
             Timestamp = System.DateTime.UtcNow,
-            LetterTileData = JsonUtility.ToJson(GetLetterTileData())
+            LetterTileData = JsonConvert.SerializeObject(GetLetterTileData())
         };
         await SaveManager.Instance.SaveGame(saveData);
     }

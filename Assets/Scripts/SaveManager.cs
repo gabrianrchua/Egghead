@@ -4,6 +4,7 @@ using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 public class SaveManager : Singleton<SaveManager>
 {
@@ -224,15 +225,16 @@ public class SaveManager : Singleton<SaveManager>
         {
             { "score", data.Score },
             { "tiles", data.LetterTileData },
-            { "timestamp", data.Timestamp.Ticks }
+            { "timestamp", data.Timestamp }
         };
 
         // save to local file
-        string json = JsonUtility.ToJson(data);
         try
         {
+            string json = JsonConvert.SerializeObject(dataToSave);
             System.IO.File.WriteAllText(GetSaveFilePath(), json);
-            Debug.Log("Saved game data to local file");
+            // TODO: remove full json logging
+            Debug.Log("Saved game data to local file: " + json);
         }
         catch (System.Exception ex)
         {
@@ -243,8 +245,7 @@ public class SaveManager : Singleton<SaveManager>
         try
         {
             await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
-            // TODO: remove full json logging
-            Debug.Log("Saved game data to CloudSave: " + json);
+            Debug.Log("Saved game data to CloudSave");
         }
         catch (System.Exception ex)
         {
@@ -305,7 +306,7 @@ public class SaveManager : Singleton<SaveManager>
             try
             {
                 string json = System.IO.File.ReadAllText(GetSaveFilePath());
-                SaveData data = JsonUtility.FromJson<SaveData>(json);
+                SaveData data = JsonConvert.DeserializeObject<SaveData>(json);
 
                 Debug.Log("Loaded game data from local file: " + data.ToPrettyString());
 
