@@ -358,9 +358,13 @@ public class GameManager : Singleton<GameManager>
         selectedTiles.Clear();
 
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
+    }
 
-        // async; but we don't care about when it finishes
-        _ = SaveGame();
+    private void OnLose()
+    {
+        // TODO: implement lose logic
+        // TODO: delete save, save high score etc.
+        Debug.Log("You lose!");
     }
 
     /// <summary>
@@ -535,7 +539,13 @@ public class GameManager : Singleton<GameManager>
     {
         // do not wait if no fire tiles are on the board
         TilePos[] fireTiles = GetAllFireTileLocations();
-        if (fireTiles.Length == 0) yield break;
+        if (fireTiles.Length == 0)
+        {
+            // async; but we don't care about when it finishes
+            _ = SaveGame();
+            yield break;
+
+        }
 
         // animate, blocking clicks
         isAnimating = true;
@@ -549,8 +559,7 @@ public class GameManager : Singleton<GameManager>
             if (row == 0)
             {
                 // lose, the tile is at the bottom
-                // TODO: implement lose logic
-                Debug.Log("You lose!");
+                OnLose();
                 yield break;
             }
             // only destroy if tile below is not a fire type, and is not on the list of fire tiles to ignore
@@ -562,6 +571,8 @@ public class GameManager : Singleton<GameManager>
         }
         DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
         isAnimating = false;
+        // async; but we don't care about when it finishes
+        _ = SaveGame();
     }
 
     /// <summary>
