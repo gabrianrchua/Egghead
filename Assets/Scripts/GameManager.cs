@@ -87,7 +87,7 @@ public class GameManager : Singleton<GameManager>
         {
             Debug.Log("Initializing as saved game");
             // load saved game
-            LetterTile.LetterTileData[][] tileData = JsonConvert.DeserializeObject<LetterTile.LetterTileData[][]>(data.LetterTileData);
+            LetterTile.LetterTileData[][] tileData = data.LetterTileData;
             for (int i = 0; i < letterTiles.Length; i++)
             {
                 List<LetterTile> current = new();
@@ -122,7 +122,7 @@ public class GameManager : Singleton<GameManager>
         {
             Score = LevelManager.Instance.TotalScore,
             Timestamp = System.DateTime.UtcNow,
-            LetterTileData = JsonConvert.SerializeObject(GetLetterTileData())
+            LetterTileData = GetLetterTileData()
         };
         await SaveManager.Instance.SaveGame(saveData);
     }

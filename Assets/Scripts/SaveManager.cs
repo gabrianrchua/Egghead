@@ -13,7 +13,8 @@ public class SaveManager : Singleton<SaveManager>
     {
         public int Score;
         public System.DateTime Timestamp;
-        public string LetterTileData;
+        // LetterTileData is saved as a string in CloudSave and must be JSON decoded first
+        public LetterTile.LetterTileData[][] LetterTileData;
 
         public readonly string ToPrettyString()
         {
@@ -221,17 +222,10 @@ public class SaveManager : Singleton<SaveManager>
 
     public async Task SaveGame(SaveData data)
     {
-        Dictionary<string, object> dataToSave = new()
-        {
-            { "score", data.Score },
-            { "tiles", data.LetterTileData },
-            { "timestamp", data.Timestamp }
-        };
-
         // save to local file
         try
         {
-            string json = JsonConvert.SerializeObject(dataToSave);
+            string json = JsonConvert.SerializeObject(data);
             System.IO.File.WriteAllText(GetSaveFilePath(), json);
             // TODO: remove full json logging
             Debug.Log("Saved game data to local file: " + json);
@@ -244,6 +238,13 @@ public class SaveManager : Singleton<SaveManager>
         // save to cloud
         try
         {
+            Dictionary<string, object> dataToSave = new()
+            {
+                { "score", data.Score },
+                // save as string in CloudSave
+                { "tiles", JsonConvert.SerializeObject(data.LetterTileData) },
+                { "timestamp", data.Timestamp }
+            };
             await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
             Debug.Log("Saved game data to CloudSave");
         }
@@ -285,7 +286,8 @@ public class SaveManager : Singleton<SaveManager>
             if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
             {
                 data.Score = score.Value.GetAs<int>();
-                data.LetterTileData = tiles.Value.GetAs<string>();
+                // TODO: make sure this deserialization actually works
+                data.LetterTileData = JsonConvert.DeserializeObject<LetterTile.LetterTileData[][]>(tiles.Value.GetAs<string>());
                 data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
             }
             else
