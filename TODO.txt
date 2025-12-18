@@ -3,13 +3,14 @@ todo:
 === p1
 - implement lose game if fire tile reaches bottom
 	- delete save game
-- save / load
-	- periodic / after each move / after quit (?) save game
-	- parse and load game
+- main menu / title screen
+
+=== p1.5
+- fix cloud save
 - log in ui
+	- username / password
 
 === p2
-- main menu / title screen
 - stats tracking
 	- high score
 	- time spent
@@ -25,7 +26,11 @@ todo:
 	- shuffle
 
 === p3
+- high score leaderboard
 - create music
 	- classic
+	- arcade
+	- zen
+- add other modes
 	- arcade
 	- zen

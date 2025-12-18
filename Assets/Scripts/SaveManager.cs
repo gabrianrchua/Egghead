@@ -304,27 +304,27 @@ public class SaveManager : Singleton<SaveManager>
         catch (System.Exception ex)
         {
             Debug.LogError("Failed to load game data from CloudSave: " + ex.Message + "; falling back to local file");
+        }
 
-            try
+        try
+        {
+            string json = System.IO.File.ReadAllText(GetSaveFilePath());
+            SaveData data = JsonConvert.DeserializeObject<SaveData>(json);
+
+            Debug.Log("Loaded game data from local file: " + data.ToPrettyString());
+
+            return data;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to load game from local file, returning new game data: " + ex.Message);
+            SaveData data = new()
             {
-                string json = System.IO.File.ReadAllText(GetSaveFilePath());
-                SaveData data = JsonConvert.DeserializeObject<SaveData>(json);
-
-                Debug.Log("Loaded game data from local file: " + data.ToPrettyString());
-
-                return data;
-            }
-            catch (System.Exception ex2)
-            {
-                Debug.LogError("Failed to load game from local file, returning new game data: " + ex2.Message);
-                SaveData data = new()
-                {
-                    Score = 0,
-                    Timestamp = System.DateTime.UtcNow,
-                    LetterTileData = null
-                };
-                return data;
-            }
+                Score = 0,
+                Timestamp = System.DateTime.UtcNow,
+                LetterTileData = null
+            };
+            return data;
         }
     }
 

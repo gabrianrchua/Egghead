@@ -362,9 +362,10 @@ public class GameManager : Singleton<GameManager>
 
     private void OnLose()
     {
-        // TODO: implement lose logic
-        // TODO: delete save, save high score etc.
         Debug.Log("You lose!");
+        _ = SaveManager.Instance.DeleteData();
+        // TODO: save high score other stats etc.
+        // TODO: show lose screen
     }
 
     /// <summary>
