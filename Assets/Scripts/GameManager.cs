@@ -365,7 +365,8 @@ public class GameManager : Singleton<GameManager>
         Debug.Log("You lose!");
         _ = SaveManager.Instance.DeleteData();
         // TODO: save high score other stats etc.
-        // TODO: show lose screen
+        LevelManager levelManager = LevelManager.Instance;
+        UIManager.Instance.ShowGameOverOverlay(levelManager.Level, levelManager.TotalScore);
     }
 
     /// <summary>

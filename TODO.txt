@@ -3,7 +3,6 @@ todo:
 === p1
 - implement lose game if fire tile reaches bottom
 	- delete save game
-- main menu / title screen
 
 === p1.5
 - fix cloud save
@@ -11,6 +10,9 @@ todo:
 	- username / password
 
 === p2
+- better main menu / title screen
+- animation when fire tile is at bottom
+- animation when lose
 - stats tracking
 	- high score
 	- time spent

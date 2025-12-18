@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -10,6 +11,8 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private Slider levelScoreSlider;
     [SerializeField] private GameObject validWordBackground;
+    [SerializeField] private GameObject gameOverOverlay;
+    [SerializeField] private TextMeshProUGUI gameOverText;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -49,5 +52,16 @@ public class UIManager : Singleton<UIManager>
     public void UnblockTaps()
     {
         IsOverlayActive = false;
+    }
+
+    public void ShowGameOverOverlay(int level, int score)
+    {
+        gameOverText.text = $"Score: {score}\nLevel {level}";
+        gameOverOverlay.SetActive(true);
+    }
+
+    public void ChangeScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
     }
 }
