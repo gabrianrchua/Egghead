@@ -1,10 +1,6 @@
 todo:
 
 === p1
-- implement lose game if fire tile reaches bottom
-	- delete save game
-
-=== p1.5
 - fix cloud save
 - log in ui
 	- username / password
