@@ -1,9 +1,8 @@
 todo:
 
 === p1
-- fix icon sizing
+- fix icon sizing again
 - null error after switching scenes
-- notch bar add deadspace
 - fix cloud save
 - log in ui
 	- username / password
