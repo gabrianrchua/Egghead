@@ -225,8 +225,10 @@ public class LetterTile : MonoBehaviour
         while (timeElapsed < duration)
         {
             timeElapsed += Time.deltaTime;
-            //transform.position = new Vector3(originalX, Mathf.Lerp(originalY, destinationY, timeElapsed / duration), 0f); // linear
-            transform.position = new Vector3(originalX, Mathf.Lerp(transform.position.y, destinationY, 0.02f), 0f); // nonlinear
+            float t = Mathf.Clamp01(timeElapsed / duration);
+            t = 1f - Mathf.Pow(1f - t, 2f); // ease-out
+            //transform.position = new Vector3(originalX, Mathf.Lerp(originalY, destinationY, Mathf.Clamp01(timeElapsed / duration)), 0f); // simple linear
+            transform.position = new Vector3(originalX, Mathf.Lerp(originalY, destinationY, t), 0f); // nonlinear
             yield return new WaitForEndOfFrame();
         }
 

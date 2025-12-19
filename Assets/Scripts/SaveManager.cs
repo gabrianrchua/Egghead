@@ -231,7 +231,7 @@ public class SaveManager : Singleton<SaveManager>
         {
             string json = JsonConvert.SerializeObject(data);
             System.IO.File.WriteAllText(GetSaveFilePath(), json);
-            Debug.Log("Saved game data to local file :" + data.ToPrettyString());
+            Debug.Log("Saved game data to local file: " + data.ToPrettyString());
         }
         catch (System.Exception ex)
         {
