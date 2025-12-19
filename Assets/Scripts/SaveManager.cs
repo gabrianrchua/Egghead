@@ -18,14 +18,14 @@ public class SaveManager : Singleton<SaveManager>
 
         public readonly string ToPrettyString()
         {
-            // TODO: remove full LetterTileData logging
-            return $"[{Timestamp.ToShortDateString()} {Timestamp.ToShortTimeString()}] {Score} {LetterTileData}";
+            return $"[{Timestamp.ToShortDateString()} {Timestamp.ToShortTimeString()}] {Score}";
         }
     }
 
     private SaveData _currentSaveData;
     private System.DateTime _currentSaveDataExpires = default;
     private Task _initializationTask;
+    private readonly bool DisableCloudSave = true;
 
     protected override void Awake()
     {
@@ -37,6 +37,10 @@ public class SaveManager : Singleton<SaveManager>
 
     private async Task Initialize()
     {
+        if (DisableCloudSave)
+        {
+            return;
+        }
         try
         {
             Debug.Log("Initializing UnityServices");
@@ -227,8 +231,7 @@ public class SaveManager : Singleton<SaveManager>
         {
             string json = JsonConvert.SerializeObject(data);
             System.IO.File.WriteAllText(GetSaveFilePath(), json);
-            // TODO: remove full json logging
-            Debug.Log("Saved game data to local file: " + json);
+            Debug.Log("Saved game data to local file :" + data.ToPrettyString());
         }
         catch (System.Exception ex)
         {
@@ -236,6 +239,10 @@ public class SaveManager : Singleton<SaveManager>
         }
 
         // save to cloud
+        if (DisableCloudSave)
+        {
+            return;
+        }
         try
         {
             Dictionary<string, object> dataToSave = new()
@@ -275,35 +282,38 @@ public class SaveManager : Singleton<SaveManager>
         // wait for sign in before continuing to load game
         await _initializationTask;
 
-        try
+        if (!DisableCloudSave)
         {
-            Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
-                await CloudSaveService.Instance.Data.Player.LoadAsync(
-                    new HashSet<string> { "score", "tiles", "timestamp" }
-                );
-
-            SaveData data = new();
-            if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
+            try
             {
-                data.Score = score.Value.GetAs<int>();
-                // TODO: make sure this deserialization actually works
-                data.LetterTileData = JsonConvert.DeserializeObject<LetterTile.LetterTileData[][]>(tiles.Value.GetAs<string>());
-                data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
+                Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
+                    await CloudSaveService.Instance.Data.Player.LoadAsync(
+                        new HashSet<string> { "score", "tiles", "timestamp" }
+                    );
+
+                SaveData data = new();
+                if (playerData.TryGetValue("score", out var score) && playerData.TryGetValue("tiles", out var tiles) && playerData.TryGetValue("timestamp", out var timestamp))
+                {
+                    data.Score = score.Value.GetAs<int>();
+                    // TODO: make sure this deserialization actually works
+                    data.LetterTileData = JsonConvert.DeserializeObject<LetterTile.LetterTileData[][]>(tiles.Value.GetAs<string>());
+                    data.Timestamp = new System.DateTime(timestamp.Value.GetAs<long>());
+                }
+                else
+                {
+                    Debug.LogWarning("Tried to load save data but one or more keys were not present!");
+                    Debug.LogWarning(playerData.Keys);
+                    throw new System.Exception("Save data invalid");
+                }
+
+                Debug.Log("Loaded game data from CloudSave: " + data.ToPrettyString());
+
+                return data;
             }
-            else
+            catch (System.Exception ex)
             {
-                Debug.LogWarning("Tried to load save data but one or more keys were not present!");
-                Debug.LogWarning(playerData.Keys);
-                throw new System.Exception("Save data invalid");
+                Debug.LogError("Failed to load game data from CloudSave: " + ex.Message + "; falling back to local file");
             }
-
-            Debug.Log("Loaded game data from CloudSave: " + data.ToPrettyString());
-
-            return data;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to load game data from CloudSave: " + ex.Message + "; falling back to local file");
         }
 
         try
@@ -332,19 +342,6 @@ public class SaveManager : Singleton<SaveManager>
     {
         try
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            await CloudSaveService.Instance.Data.Player.DeleteAsync("score");
-            await CloudSaveService.Instance.Data.Player.DeleteAsync("tiles");
-            await CloudSaveService.Instance.Data.Player.DeleteAsync("timestamp");
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to delete game data from CloudSave: " + ex.Message);
-        }
-
-        try
-        {
             string path = GetSaveFilePath();
             if (System.IO.File.Exists(path))
             {
@@ -354,6 +351,23 @@ public class SaveManager : Singleton<SaveManager>
         catch (System.Exception ex)
         {
             Debug.LogError("Failed to delete game data from local file: " + ex.Message);
+        }
+
+        if (DisableCloudSave)
+        {
+            return;
+        }
+        try
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("score");
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("tiles");
+            await CloudSaveService.Instance.Data.Player.DeleteAsync("timestamp");
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to delete game data from CloudSave: " + ex.Message);
         }
     }
 }

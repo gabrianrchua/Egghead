@@ -7,6 +7,8 @@ todo:
 
 === p2
 - better main menu / title screen
+	- show when saved game is active
+	- option to delete old saved game / start new game
 - animation when fire tile is at bottom
 - animation when lose
 - stats tracking
