@@ -2,6 +2,7 @@ todo:
 
 === p1
 - fix icon sizing again
+- fix screen safe area still wrong
 - null error after switching scenes
 - fix cloud save
 - log in ui
