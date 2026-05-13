@@ -66,7 +66,7 @@ public class LevelManager : Singleton<LevelManager>
     /// Can handle multiple level ups.
     /// </summary>
     /// <param name="amount">Amount to increase score</param>
-    /// <returns><c>true</c> if at least one level?up occurred, otherwise <c>false</c></returns>
+    /// <returns><c>true</c> if at least one level-up occurred, otherwise <c>false</c></returns>
     public bool AddScore(int amount)
     {
         bool leveledUp = false;
