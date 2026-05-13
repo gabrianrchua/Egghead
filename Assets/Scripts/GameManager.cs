@@ -12,11 +12,11 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private CSVReader csvReader;
     [SerializeField] private LetterTile letterTilePrefab;
     [SerializeField] private float[] bonusTileTypeScoreMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
-    [SerializeField] private float[] bonusTileTypeProbabilityMultipliers = { 1f, 0.3f, 0.1f }; // bonus, gold, diamond
-    // simple ax+b, with max cap. default values = impossible to get bonus <400 score; max out at 50% with 1400 score move
-    [SerializeField] private float bonusTileA = 0.0005f;
+    [SerializeField] private float[] bonusTileTypeProbabilityMultipliers = { 1f, 0.5f, 0.2f }; // bonus, gold, diamond
+    // simple ax+b, with max cap. default values = impossible to get bonus <200 score; max out at 75% with 950 score move
+    [SerializeField] private float bonusTileA = 0.001f;
     [SerializeField] private float bonusTileB = -0.2f;
-    [SerializeField] private float bonusTileMax = 0.5f;
+    [SerializeField] private float bonusTileMax = 0.75f;
 
     private Dictionary<LetterTile.TileType, float> tileTypeMultipliersDict;
     private List<LetterTile>[] letterTiles;
