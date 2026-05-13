@@ -332,6 +332,20 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    public void DeselectAllTiles()
+    {
+        if (isAnimating || UIManager.Instance.IsOverlayActive || selectedTiles == null) return;
+
+        foreach (TilePos tile in selectedTiles)
+        {
+            letterTiles[tile.Column][tile.Row].SetIsSelected(false);
+        }
+
+        selectedTiles.Clear();
+        UIManager.Instance.SetCurrentWord("");
+        UIManager.Instance.ClearCurrentWordScore();
+    }
+
     public void SubmitCurrentWord()
     {
         // first check if word is valid

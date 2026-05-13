@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class TouchscreenHandler : MonoBehaviour
 {
@@ -41,6 +44,12 @@ public class TouchscreenHandler : MonoBehaviour
         }
 
         currentScreenPosition = context.ReadValue<Vector2>();
+        if (IsPointerOverUI(currentScreenPosition))
+        {
+            currentTile = null;
+            return;
+        }
+
         //Debug.Log(currentScreenPosition);
         //mainCamera.ScreenToWorldPoint(currentScreenPosition);
         Ray ray = mainCamera.ScreenPointToRay(currentScreenPosition);
@@ -60,6 +69,11 @@ public class TouchscreenHandler : MonoBehaviour
                 }
             }
         }
+        else
+        {
+            currentTile = null;
+            GameManager.Instance.DeselectAllTiles();
+        }
     }
 
     /*press.performed += _ =>
@@ -70,5 +84,34 @@ public class TouchscreenHandler : MonoBehaviour
     private void OnPressCanceled(InputAction.CallbackContext context)
     {
         currentTile = null;
+    }
+
+    private bool IsPointerOverUI(Vector2 screenPosition)
+    {
+        Debug.Log($"current screen position: ${screenPosition}");
+        if (EventSystem.current == null)
+        {
+            Debug.Log("no event system");
+            return false;
+        }
+
+        PointerEventData pointerData = new(EventSystem.current)
+        {
+            position = screenPosition
+        };
+        Debug.Log($"pointerData ${pointerData}");
+        List<RaycastResult> results = new();
+        EventSystem.current.RaycastAll(pointerData, results);
+        string tmp = "";
+        foreach (RaycastResult result in results)
+        {
+            tmp += result.ToString() + "\n";
+            if (result.module is GraphicRaycaster)
+            {
+                return true;
+            }
+        }
+        Debug.Log($"results ${tmp}");
+        return false;
     }
 }
