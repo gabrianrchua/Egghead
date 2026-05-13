@@ -79,6 +79,9 @@ public class SaveManager : Singleton<SaveManager>
     {
         base.Awake();
 
+        // If we got here, this is the only SaveManager; we need to persist this object across scene changes
+        DontDestroyOnLoad(gameObject);
+
         localOnlyMode = PlayerPrefs.GetInt(LocalOnlyModeKey, 0) == 1;
 
         // Intentional non-await: kick off and save initialization task, but don't block execution
