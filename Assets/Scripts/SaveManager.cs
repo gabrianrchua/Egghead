@@ -65,7 +65,7 @@ public class SaveManager : Singleton<SaveManager>
     /// <summary>
     /// Current Unity Authentication player ID, or <c>null</c> when signed out.
     /// </summary>
-    public string PlayerId => IsSignedIn ? AuthenticationService.Instance.PlayerId : null;
+    public PlayerInfo PlayerInfo => IsSignedIn ? AuthenticationService.Instance.PlayerInfo : null;
 
     /// <summary>
     /// Returns whether the user explicitly chose local-only mode.

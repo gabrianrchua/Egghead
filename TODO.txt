@@ -1,9 +1,10 @@
 todo:
 
 === p1
-- fix cloud save
-- log in ui
+- hook up log in ui
 	- username / password
+	- register form
+	- sign out if logged in
 
 === p2
 - better main menu / title screen
