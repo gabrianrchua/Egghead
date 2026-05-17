@@ -63,7 +63,7 @@ public class SaveManager : Singleton<SaveManager>
     public bool IsSignedIn => AuthenticationService.Instance != null && AuthenticationService.Instance.IsSignedIn;
 
     /// <summary>
-    /// Current Unity Authentication player ID, or <c>null</c> when signed out.
+    /// Current Unity Authentication player data, or <c>null</c> when signed out.
     /// </summary>
     public PlayerInfo PlayerInfo => IsSignedIn ? AuthenticationService.Instance.PlayerInfo : null;
 

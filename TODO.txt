@@ -5,6 +5,7 @@ todo:
 	- username / password
 	- register form
 	- sign out if logged in
+	! initialize sign in ui -> hook into lifecycle events before initialize
 
 === p2
 - better main menu / title screen

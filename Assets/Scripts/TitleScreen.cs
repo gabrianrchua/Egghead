@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Threading.Tasks;
 
 public class TitleScreen : MonoBehaviour
 {
@@ -10,20 +11,72 @@ public class TitleScreen : MonoBehaviour
     private const int MaxPasswordLength = 30;
 
     [Header("Register section")]
+    [SerializeField] private GameObject registerPanel;
     [SerializeField] private TMP_InputField registerUsername;
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private TMP_InputField registerConfirm;
     [SerializeField] private TMP_Text registerPasswordError;
 
     [Header("Sign in section")]
+    [SerializeField] private GameObject signInPanel;
     [SerializeField] private TMP_InputField signInUsername;
     [SerializeField] private TMP_InputField signInPassword;
+
+    [Header("Profile section")]
+    [SerializeField] private GameObject profilePanel;
+    [SerializeField] private TMP_Text profileUsername;
+    [SerializeField] private TMP_Text profileDate;
+    [SerializeField] private TMP_Text profileId;
 
     private void Start()
     {
         signInPassword.asteriskChar = '•';
         registerPassword.asteriskChar = '•';
         registerConfirm.asteriskChar = '•';
+
+        ApplySaveManagerState();
+    }
+
+    private void ApplySaveManagerState()
+    {
+        SaveManager saveManager = SaveManager.Instance;
+
+        Debug.Log(saveManager.PlayerInfo);
+        if (saveManager.IsCloudActive)
+        {
+            profilePanel.SetActive(true);
+            Unity.Services.Authentication.PlayerInfo info = saveManager.PlayerInfo;
+            profileUsername.text = $"Signed in as: {info.Username}";
+            profileDate.text = info.CreatedAt == null ? "" : $"Playing Egghead since {info.CreatedAt?.ToShortDateString()}";
+            profileId.text = $"Player ID: {info.Id}";
+        }
+        else if (saveManager.IsLocalOnly)
+        {
+            signInPanel.SetActive(true);
+        }
+        else
+        {
+            registerPanel.SetActive(true);
+        }
+    }
+
+    public void OnRegisterFieldChanged()
+    {
+        registerPasswordError.text = ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text) ?? "";
+    }
+
+    public async Task OnRegisterClicked()
+    {
+        string validationResult = ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text);
+        if (validationResult == null)
+        {
+            await SaveManager.Instance.RegisterWithUsernamePasswordAsync(registerUsername.text, registerPassword.text);
+            ApplySaveManagerState();
+        }
+        else
+        {
+            registerPasswordError.text = validationResult;
+        }
     }
 
     public void ChangeScene(string sceneName)
