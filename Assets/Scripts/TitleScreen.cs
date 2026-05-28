@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using System.Threading.Tasks;
 using Unity.Services.Core;
+using UnityEngine.UI;
 
 public class TitleScreen : MonoBehaviour, IAuthStateListener
 {
@@ -17,11 +18,13 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private TMP_InputField registerConfirm;
     [SerializeField] private TMP_Text registerPasswordError;
+    [SerializeField] private Button registerButton;
 
     [Header("Sign in section")]
     [SerializeField] private GameObject signInPanel;
     [SerializeField] private TMP_InputField signInUsername;
     [SerializeField] private TMP_InputField signInPassword;
+    [SerializeField] private Button signInButton;
 
     [Header("Profile section")]
     [SerializeField] private GameObject profilePanel;
@@ -34,6 +37,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         signInPassword.asteriskChar = '•';
         registerPassword.asteriskChar = '•';
         registerConfirm.asteriskChar = '•';
+        registerPasswordError.text = "";
 
         SaveManager.Instance.RegisterAuthListener(this);
         Debug.Log("Registered auth state listener");
@@ -46,7 +50,10 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     {
         SaveManager saveManager = SaveManager.Instance;
 
-        Debug.Log(saveManager.PlayerInfo);
+        profilePanel.SetActive(false);
+        signInPanel.SetActive(false);
+        registerPanel.SetActive(false);
+        
         if (saveManager.IsCloudActive && saveManager.PlayerInfo.Username != null)
         {
             profilePanel.SetActive(true);
@@ -65,12 +72,32 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         }
     }
 
+    #region UI events
     public void OnRegisterFieldChanged()
     {
-        registerPasswordError.text = ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text) ?? "";
+        string errorMessage = ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text);
+        if (errorMessage == null)
+        {
+            registerButton.interactable = true;
+        }
+        else
+        {
+            registerButton.interactable = false;
+            registerPasswordError.text = errorMessage;
+        }
     }
 
-    public async Task OnRegisterClicked()
+    public void OnRegisterButtonClicked()
+    {
+        if (ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text) != null)
+        {
+            // TODO: show notification that some fields were invalid OR wiggle error check
+            return;
+        }
+        // Intentional non-await async call: this wrapper method is called by the UI button click
+        _ = OnRegisterClicked();
+    }
+    private async Task OnRegisterClicked()
     {
         string validationResult = ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text);
         if (validationResult == null)
@@ -83,6 +110,30 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
             registerPasswordError.text = validationResult;
         }
     }
+    public void OnLogInClicked()
+    {
+        string username = signInUsername.text.Trim();
+        string password = signInPassword.text;
+        if (username.Length == 0 || password.Length == 0)
+        {
+            // TODO: show notification that some fields were blank
+            return;
+        }
+        _ = SaveManager.Instance.LoginWithUsernamePasswordAsync(username, password);
+    }
+    public void OnLogInFieldChanged()
+    {
+        signInButton.interactable = signInUsername.text.Trim().Length != 0 && signInPassword.text.Length != 0;
+    }
+    public void OnSignOutClicked()
+    {
+        SaveManager.Instance.SignOutToLocalOnly();
+    }
+    public void OnDeleteSaveDataClicked()
+    {
+        _ = SaveManager.Instance.DeleteData();
+    }
+    #endregion
 
     public void ChangeScene(string sceneName)
     {
@@ -150,6 +201,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         return null;
     }
 
+    #region IAuthStateListener events
     public void OnSignedIn()
     {
         ApplySaveManagerState();
@@ -169,4 +221,5 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     {
         ApplySaveManagerState();
     }
+    #endregion
 }

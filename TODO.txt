@@ -1,29 +1,14 @@
 todo:
 
-## UI To Hook Up
-  - Register form: username, password, confirm password, submit button -> `RegisterWithUsernamePasswordAsync`.
-  - Login form: username, password, submit button -> `LoginWithUsernamePasswordAsync`.
-  - Sign out button -> `SignOutToLocalOnly`.
-  - Status display can read `IsLocalOnly`, `IsCloudActive`, and `PlayerId`.
-  - Show validation errors from thrown/returned auth failures; username is 3-20 chars, password is 8-30 chars with
-  lowercase, uppercase, number, and symbol per Unity docs.
-
-
-  - Fresh install/no token/no local file: starts anonymous, creates new game, save writes local and cloud.
-  - Cached anonymous token: startup restores same PlayerID and loads cloud.
-  - Register while anonymous: PlayerID remains the same, local save uploads, later login on another device loads it.
-  - Sign out: session token cleared, local-only flag persists, restart uses local only and does not auto-create a cloud
-  player.
-  - Login existing account with both local/cloud saves: newer `Timestamp` wins and is synced to both stores.
-  - Offline/service failure: game still loads/saves local without blocking gameplay.
-  - Delete data: delete local; if cloud active, delete `saveDataJson`; if local-only, skip cloud delete
-
 === p1
 - hook up log in ui
-	- username / password
-	- register form
-	- sign out if logged in
-	! initialize sign in ui -> hook into lifecycle events before initialize
+	- notifs (TODOs)
+	- sometimes not catching lifecycle events
+		- after log in
+		- after sign out (doesn't go to log in)
+	- allow switching from register and log in
+	- animations
+	- prompts on profile page
 
 === p2
 - better main menu / title screen
