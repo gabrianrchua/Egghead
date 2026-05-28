@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Threading.Tasks;
+using Unity.Services.Core;
 
-public class TitleScreen : MonoBehaviour
+public class TitleScreen : MonoBehaviour, IAuthStateListener
 {
     private const int MinUsernameLength = 3;
     private const int MaxUsernameLength = 20;
@@ -34,6 +35,10 @@ public class TitleScreen : MonoBehaviour
         registerPassword.asteriskChar = '•';
         registerConfirm.asteriskChar = '•';
 
+        SaveManager.Instance.RegisterAuthListener(this);
+        Debug.Log("Registered auth state listener");
+
+        // Auth may complete before register is complete, so try applying state anyway
         ApplySaveManagerState();
     }
 
@@ -42,7 +47,7 @@ public class TitleScreen : MonoBehaviour
         SaveManager saveManager = SaveManager.Instance;
 
         Debug.Log(saveManager.PlayerInfo);
-        if (saveManager.IsCloudActive)
+        if (saveManager.IsCloudActive && saveManager.PlayerInfo.Username != null)
         {
             profilePanel.SetActive(true);
             Unity.Services.Authentication.PlayerInfo info = saveManager.PlayerInfo;
@@ -143,5 +148,25 @@ public class TitleScreen : MonoBehaviour
         }
 
         return null;
+    }
+
+    public void OnSignedIn()
+    {
+        ApplySaveManagerState();
+    }
+
+    public void OnSignInFailed(RequestFailedException err)
+    {
+        ApplySaveManagerState();
+    }
+
+    public void OnSignedOut()
+    {
+        ApplySaveManagerState();
+    }
+
+    public void OnExpired()
+    {
+        ApplySaveManagerState();
     }
 }

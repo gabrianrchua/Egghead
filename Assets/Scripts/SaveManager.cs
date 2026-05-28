@@ -140,6 +140,18 @@ public class SaveManager : Singleton<SaveManager>
     }
 
     /// <summary>
+    /// Register an auth state listener to consume <c>AuthenticationService</c> lifecycle events
+    /// </summary>
+    /// <param name="listener">The listener to register, which implements interface <c>IAuthStateListener</c></param>
+    public void RegisterAuthListener(IAuthStateListener listener)
+    {
+        AuthenticationService.Instance.SignedIn += listener.OnSignedIn;
+        AuthenticationService.Instance.SignInFailed += listener.OnSignInFailed;
+        AuthenticationService.Instance.SignedOut += listener.OnSignedOut;
+        AuthenticationService.Instance.Expired += listener.OnExpired;
+    }
+
+    /// <summary>
     /// Register Unity Authentication event handlers once for logging and cloud state updates.
     /// </summary>
     private void SetupEvents()
