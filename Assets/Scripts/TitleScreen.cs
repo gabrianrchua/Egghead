@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class TitleScreen : MonoBehaviour, IAuthStateListener
 {
+    private static readonly int ShakeHash = Animator.StringToHash("Shake");
     private const int MinUsernameLength = 3;
     private const int MaxUsernameLength = 20;
     private const int MinPasswordLength = 8;
@@ -18,6 +19,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private TMP_InputField registerConfirm;
     [SerializeField] private TMP_Text registerPasswordError;
+    [SerializeField] private Animator registerPasswordErrorAnimator;
     [SerializeField] private Button registerButton;
 
     [Header("Sign in section")]
@@ -79,6 +81,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         if (errorMessage == null)
         {
             registerButton.interactable = true;
+            registerPasswordError.text = "";
         }
         else
         {
@@ -91,7 +94,8 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     {
         if (ValidateRegistrationCredentials(registerUsername.text, registerPassword.text, registerConfirm.text) != null)
         {
-            // TODO: show notification that some fields were invalid OR wiggle error check
+            // This should not happen, but if it does, show a nice shake animation
+            registerPasswordErrorAnimator.SetTrigger(ShakeHash);
             return;
         }
         // Intentional non-await async call: this wrapper method is called by the UI button click

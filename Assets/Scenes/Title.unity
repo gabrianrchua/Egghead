@@ -2115,7 +2115,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &383888666
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6703,6 +6703,7 @@ MonoBehaviour:
   registerPassword: {fileID: 1462864837}
   registerConfirm: {fileID: 2031530996}
   registerPasswordError: {fileID: 1707096602}
+  registerPasswordErrorAnimator: {fileID: 1707096604}
   registerButton: {fileID: 917401116}
   signInPanel: {fileID: 1874537754}
   signInUsername: {fileID: 1025035565}
@@ -7221,6 +7222,7 @@ GameObject:
   - component: {fileID: 1707096601}
   - component: {fileID: 1707096603}
   - component: {fileID: 1707096602}
+  - component: {fileID: 1707096604}
   m_Layer: 5
   m_Name: PasswordErrorMessage
   m_TagString: Untagged
@@ -7347,6 +7349,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1707096600}
   m_CullTransparentMesh: 1
+--- !u!95 &1707096604
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707096600}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b2d55bf5febca8440b5ac3384da56223, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1729623543
 GameObject:
   m_ObjectHideFlags: 0
