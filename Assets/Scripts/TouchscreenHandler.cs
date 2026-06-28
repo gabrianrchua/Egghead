@@ -88,10 +88,8 @@ public class TouchscreenHandler : MonoBehaviour
 
     private bool IsPointerOverUI(Vector2 screenPosition)
     {
-        Debug.Log($"current screen position: ${screenPosition}");
         if (EventSystem.current == null)
         {
-            Debug.Log("no event system");
             return false;
         }
 
@@ -99,7 +97,6 @@ public class TouchscreenHandler : MonoBehaviour
         {
             position = screenPosition
         };
-        Debug.Log($"pointerData ${pointerData}");
         List<RaycastResult> results = new();
         EventSystem.current.RaycastAll(pointerData, results);
         string tmp = "";
@@ -111,7 +108,6 @@ public class TouchscreenHandler : MonoBehaviour
                 return true;
             }
         }
-        Debug.Log($"results ${tmp}");
         return false;
     }
 }
