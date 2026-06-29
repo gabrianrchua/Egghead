@@ -79,6 +79,12 @@ public class SaveManager : Singleton<SaveManager>
     {
         base.Awake();
 
+        // Extra duplicate check - disabling script doesn't immediately halt execution
+        if (!enabled)
+        {
+            return;
+        }
+
         // If we got here, this is the only SaveManager; we need to persist this object across scene changes
         DontDestroyOnLoad(gameObject);
 
