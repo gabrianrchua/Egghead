@@ -51,6 +51,7 @@ public class SaveManager : Singleton<SaveManager>
     private bool cloudAvailable;
     private bool localOnlyMode;
     private bool eventsSetup;
+    private List<IAuthStateListener> authStateListeners = new();
 
     /// <summary>
     /// Returns whether Cloud Save should be used for this session.
@@ -151,6 +152,7 @@ public class SaveManager : Singleton<SaveManager>
     /// <param name="listener">The listener to register, which implements interface <c>IAuthStateListener</c></param>
     public void RegisterAuthListener(IAuthStateListener listener)
     {
+        authStateListeners.Add(listener);
         AuthenticationService.Instance.SignedIn += listener.OnSignedIn;
         AuthenticationService.Instance.SignInFailed += listener.OnSignInFailed;
         AuthenticationService.Instance.SignedOut += listener.OnSignedOut;
@@ -169,6 +171,9 @@ public class SaveManager : Singleton<SaveManager>
 
         AuthenticationService.Instance.SignedIn += () =>
         {
+            // Authentication raises SignedIn before the awaiting sign-in method resumes.
+            // Set this first so UI listeners observe an active cloud session.
+            cloudAvailable = true;
             Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
         };
 
