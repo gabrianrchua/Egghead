@@ -6713,6 +6713,7 @@ MonoBehaviour:
   profileUsername: {fileID: 1984216874}
   profileDate: {fileID: 232079919}
   profileId: {fileID: 128914698}
+  playButtonText: {fileID: 1319421595}
 --- !u!4 &1551913925
 Transform:
   m_ObjectHideFlags: 0

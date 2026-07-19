@@ -34,18 +34,29 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [SerializeField] private TMP_Text profileDate;
     [SerializeField] private TMP_Text profileId;
 
+    [Header("Play button")]
+    [SerializeField] private TMP_Text playButtonText;
+
+    private const string NewGameLabel = "New Game";
+    private const string ContinueGameLabel = "Continue Game";
+
     private void Start()
     {
         signInPassword.asteriskChar = '•';
         registerPassword.asteriskChar = '•';
         registerConfirm.asteriskChar = '•';
         registerPasswordError.text = "";
+        if (playButtonText != null)
+        {
+            playButtonText.text = NewGameLabel;
+        }
 
         SaveManager.Instance.RegisterAuthListener(this);
         Debug.Log("Registered auth state listener");
 
         // Auth may complete before register is complete, so try applying state anyway
         ApplySaveManagerState();
+        _ = RefreshPlayButtonLabelAsync();
     }
 
     private void ApplySaveManagerState()
@@ -135,13 +146,41 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     }
     public void OnDeleteSaveDataClicked()
     {
-        _ = SaveManager.Instance.DeleteData();
+        _ = DeleteSaveDataAndRefreshAsync();
     }
     #endregion
 
     public void ChangeScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
+    }
+
+    /// <summary>
+    /// Update the play button after its asynchronous local/cloud save lookup completes.
+    /// </summary>
+    private async Task RefreshPlayButtonLabelAsync()
+    {
+        try
+        {
+            bool hasSavedGame = await SaveManager.Instance.HasSavedGame();
+            if (playButtonText != null)
+            {
+                playButtonText.text = hasSavedGame ? ContinueGameLabel : NewGameLabel;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to check for saved game data: " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete saved data and restore the play button's new-game label.
+    /// </summary>
+    private async Task DeleteSaveDataAndRefreshAsync()
+    {
+        await SaveManager.Instance.DeleteData();
+        await RefreshPlayButtonLabelAsync();
     }
 
     /// <summary>
@@ -209,21 +248,25 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     public void OnSignedIn()
     {
         ApplySaveManagerState();
+        _ = RefreshPlayButtonLabelAsync();
     }
 
     public void OnSignInFailed(RequestFailedException err)
     {
         ApplySaveManagerState();
+        _ = RefreshPlayButtonLabelAsync();
     }
 
     public void OnSignedOut()
     {
         ApplySaveManagerState();
+        _ = RefreshPlayButtonLabelAsync();
     }
 
     public void OnExpired()
     {
         ApplySaveManagerState();
+        _ = RefreshPlayButtonLabelAsync();
     }
     #endregion
 }

@@ -403,6 +403,17 @@ public class SaveManager : Singleton<SaveManager>
     }
 
     /// <summary>
+    /// Returns whether a resumable game board is available from the active save source.
+    /// A save with no tile data represents a new game, so it should not be presented as a game
+    /// the player can continue.
+    /// </summary>
+    public async Task<bool> HasSavedGame()
+    {
+        SaveData saveData = await GetCurrentSaveData();
+        return saveData.LetterTileData != null;
+    }
+
+    /// <summary>
     /// Load from Cloud Save when active, mirror successful cloud loads locally, and fall back to local/new data.
     /// </summary>
     /// <returns>The loaded save data, or a new save if no valid data exists.</returns>
