@@ -3,9 +3,6 @@ todo:
 === p1
 - hook up log in ui
 	- notifs (TODOs)
-	- sometimes not catching lifecycle events
-		- after log in
-		- after sign out (doesn't go to log in)
 	- confirm prompts on profile page
 
 === p2

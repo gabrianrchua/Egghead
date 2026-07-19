@@ -241,6 +241,11 @@ public class SaveManager : Singleton<SaveManager>
 
         SaveData localSave = LoadLocalOrNew();
         await SaveCloudSaveDataAsync(localSave);
+
+        foreach (IAuthStateListener listener in authStateListeners)
+        {
+            listener?.OnSignedIn();
+        }
     }
 
     /// <summary>
@@ -271,6 +276,11 @@ public class SaveManager : Singleton<SaveManager>
         SaveData winner = ChooseNewestSave(cloudLoaded, cloudSave, localLoaded, localSave);
         WriteLocalSaveData(winner);
         await SaveCloudSaveDataAsync(winner);
+
+        foreach (IAuthStateListener listener in authStateListeners)
+        {
+            listener?.OnSignedIn();
+        }
     }
 
     /// <summary>
