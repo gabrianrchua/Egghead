@@ -2,7 +2,6 @@ todo:
 
 === p1
 - hook up log in ui
-	- notifs (TODOs)
 	- confirm prompts on profile page
 
 === p2

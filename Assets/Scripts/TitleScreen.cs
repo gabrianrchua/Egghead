@@ -131,7 +131,6 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         string password = signInPassword.text;
         if (username.Length == 0 || password.Length == 0)
         {
-            // TODO: show notification that some fields were blank
             return;
         }
         _ = SaveManager.Instance.LoginWithUsernamePasswordAsync(username, password);
