@@ -1293,7 +1293,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Shuffling can help get you out of a pickle, but adds fire tiles!
+  m_text: Shuffling can help get you unstuck, but removes bonus tiles and adds fire
+    tiles!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d39130f0164f7d247aed26fae0b019ed, type: 2}
   m_sharedMaterial: {fileID: 537721546718677587, guid: d39130f0164f7d247aed26fae0b019ed, type: 2}
