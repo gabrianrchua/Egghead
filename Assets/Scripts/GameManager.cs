@@ -627,29 +627,22 @@ public class GameManager : Singleton<GameManager>
 
         float rand = Random.value;
 
-        Debug.Log($"base {baseProbability} bonus {bonusProbability} gold {goldProbability} diamond {diamondProbability} heat {heat} rand {rand}");
-
         if (rand < diamondProbability)
         {
-            Debug.Log("returning diamond");
             return LetterTile.TileType.Diamond;
         }
         else if (rand < goldProbability)
         {
-            Debug.Log("returning gold");
             return LetterTile.TileType.Gold;
         }
         else if (rand < bonusProbability)
         {
-            Debug.Log("returning bonus");
             return LetterTile.TileType.Bonus;
         }
         else if (rand < heat)
         {
-            Debug.Log("returning fire");
             return LetterTile.TileType.Fire;
         }
-        Debug.Log("returning normal");
         return LetterTile.TileType.Normal;
     }
 
