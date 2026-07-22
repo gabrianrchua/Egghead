@@ -5073,7 +5073,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d74ebe0dae81f064f947a4dfc07bc70b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelScoreA: 3000
+  levelScoreA: 500
   levelScoreB: 0
   levelScoreC: 500
   heatProbabilityA: 0.5

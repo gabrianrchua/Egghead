@@ -2,14 +2,20 @@ using UnityEngine;
 
 public class LevelManager : Singleton<LevelManager>
 {
-    // levelScore multiplier = ax^2 + bx + c
-    [SerializeField] private float levelScoreA = 500f;
-    [SerializeField] private float levelScoreB;
-    [SerializeField] private float levelScoreC = 3000f;
+    // level score requirement = base + linear * (level - 1) + amplitude / (1 + e^(-rate * (level - midpoint)))
+    // sigmoid accelerates early progression, while the linear term keeps late levels increasing
+    // default values ~~ 1000, 1300, 1600, 2000, 2500 ... 5000, 5100, 5200
+    [Header("Level score requirement function (linear + sigmoid)")]
+    [SerializeField] private float levelScoreBase = 824f;
+    [SerializeField] private float levelScoreLinearGrowth = 100f;
+    [SerializeField] private float levelScoreSigmoidAmplitude = 2276f;
+    [SerializeField] private float levelScoreSigmoidRate = 0.648f;
+    [SerializeField] private float levelScoreSigmoidMidpoint = 4.66f;
 
     // heat increases each level for probability of fire tile per turn, reduced by high value words
     // heat probability per level = modified sigmoid; (a / (1 + e^(bx+c))) + d
     // default values: 0.01 to 0.5, plateauing around level 25
+    [Header("Heat probability function ((a / (1 + e^(bx+c))) + d)")]
     [SerializeField] private float heatProbabilityA = 0.5f;
     [SerializeField] private float heatProbabilityB = -0.3f;
     [SerializeField] private float heatProbabilityC = 4f;
@@ -28,8 +34,13 @@ public class LevelManager : Singleton<LevelManager>
     {
         get
         {
-            int adjustedLevel = Level - 1;
-            return Mathf.RoundToInt((levelScoreA * adjustedLevel * adjustedLevel) + (levelScoreB * adjustedLevel) + levelScoreC);
+            float sigmoid = levelScoreSigmoidAmplitude /
+                (1f + Mathf.Exp(-levelScoreSigmoidRate * (Level - levelScoreSigmoidMidpoint)));
+
+            return Mathf.RoundToInt(
+                levelScoreBase +
+                (levelScoreLinearGrowth * (Level - 1)) +
+                sigmoid);
         }
     }
     public float LevelPercentage
