@@ -33,6 +33,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [SerializeField] private TMP_Text profileUsername;
     [SerializeField] private TMP_Text profileDate;
     [SerializeField] private TMP_Text profileId;
+    [SerializeField] private Button profileDeleteSaveButton;
 
     [Header("Play button")]
     [SerializeField] private TMP_Text playButtonText;
@@ -46,10 +47,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         registerPassword.asteriskChar = '•';
         registerConfirm.asteriskChar = '•';
         registerPasswordError.text = "";
-        if (playButtonText != null)
-        {
-            playButtonText.text = NewGameLabel;
-        }
+        playButtonText.text = NewGameLabel;
 
         SaveManager.Instance.RegisterAuthListener(this);
         Debug.Log("Registered auth state listener");
@@ -66,7 +64,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         profilePanel.SetActive(false);
         signInPanel.SetActive(false);
         registerPanel.SetActive(false);
-        
+
         if (saveManager.IsCloudActive && saveManager.PlayerInfo.Username != null)
         {
             profilePanel.SetActive(true);
@@ -168,10 +166,17 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         try
         {
             bool hasSavedGame = await SaveManager.Instance.HasSavedGame();
-            if (playButtonText != null)
+            if (hasSavedGame)
             {
-                playButtonText.text = hasSavedGame ? ContinueGameLabel : NewGameLabel;
+                playButtonText.text = ContinueGameLabel;
+                profileDeleteSaveButton.interactable = true;
             }
+            else
+            {
+                playButtonText.text = NewGameLabel;
+                profileDeleteSaveButton.interactable = false;
+            }
+
         }
         catch (System.Exception ex)
         {

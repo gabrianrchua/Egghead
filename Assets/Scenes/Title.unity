@@ -471,7 +471,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Delete save data
+  m_text: Delete saved game
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d39130f0164f7d247aed26fae0b019ed, type: 2}
   m_sharedMaterial: {fileID: 537721546718677587, guid: d39130f0164f7d247aed26fae0b019ed, type: 2}
@@ -4122,7 +4122,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &726064943
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6725,7 +6725,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1451986794}
   m_OnClick:
     m_PersistentCalls:
@@ -7309,6 +7309,7 @@ MonoBehaviour:
   profileUsername: {fileID: 1984216874}
   profileDate: {fileID: 232079919}
   profileId: {fileID: 128914698}
+  profileDeleteSaveButton: {fileID: 1451986793}
   playButtonText: {fileID: 1319421595}
 --- !u!4 &1551913925
 Transform:

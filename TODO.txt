@@ -1,8 +1,6 @@
 todo:
 
 === p1
-- hook up log in ui
-	- confirm prompts on profile page
 
 === p2
 ? title: option to delete old saved game / start new game
