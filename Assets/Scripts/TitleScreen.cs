@@ -141,11 +141,17 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     }
     public void OnSignOutClicked()
     {
-        SaveManager.Instance.SignOutToLocalOnly();
+        Modal.Instance.OpenModal(null, () =>
+        {
+            SaveManager.Instance.SignOutToLocalOnly();
+        }, "Are you sure you want to sign out?");
     }
     public void OnDeleteSaveDataClicked()
     {
-        _ = DeleteSaveDataAndRefreshAsync();
+        Modal.Instance.OpenModal(null, () =>
+        {
+            _ = DeleteSaveDataAndRefreshAsync();
+        }, "Are you sure you want to delete your saved game?");
     }
     #endregion
 

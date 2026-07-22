@@ -5,6 +5,7 @@ using UnityEngine;
 public class Modal : Singleton<Modal>
 {
     [Header("Object references")]
+    [SerializeField] private GameObject modalBackgroundObject;
     [SerializeField] private TextMeshProUGUI promptText;
     [SerializeField] private TextMeshProUGUI negativeActionText;
     [SerializeField] private TextMeshProUGUI positiveActionText;
@@ -35,7 +36,7 @@ public class Modal : Singleton<Modal>
         positiveActionText.text = positiveActionLabel;
         onNegativeAction = negativeActionCallback;
         onPositiveAction = positiveActionCallback;
-        gameObject.SetActive(true);
+        modalBackgroundObject.SetActive(true);
     }
 
     /// <summary>
