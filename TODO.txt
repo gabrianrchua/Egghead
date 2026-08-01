@@ -4,7 +4,6 @@ todo:
 
 === p2
 ? title: option to delete old saved game / start new game
-- animation when fire tile is at bottom
 - animation when lose
 - stats tracking
 	- high score
@@ -19,6 +18,7 @@ todo:
 	- tile burned
 	- valid word hovered
 	- shuffle
+- show warning modal first time fire tile reaches bottom
 
 === p3
 - high score leaderboard

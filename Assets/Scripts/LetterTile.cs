@@ -19,6 +19,7 @@ public class LetterTile : MonoBehaviour
     [SerializeField] private GameObject diamondSelectedSprite;
 
     private const float dropAnimationDuration = 0.5f;
+    private static readonly int FireCriticalHash = Animator.StringToHash("FireCritical");
 
     private char letter;
     private TileType tileType;
@@ -201,6 +202,12 @@ public class LetterTile : MonoBehaviour
             waitTime = 0.5f;
         }
         StartCoroutine(WaitThenDestroySelf(waitTime));
+    }
+
+    public void TriggerFireCritical()
+    {
+        EnableAnimator();
+        animator.SetTrigger(FireCriticalHash);
     }
 
     public void SetPosition(float x, float y, int column, int row)

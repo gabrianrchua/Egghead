@@ -572,7 +572,12 @@ public class GameManager : Singleton<GameManager>
         List<TilePos> ignoreTiles = new(immuneFireTiles);
         foreach ((int col, int row) in fireTiles)
         {
-            if (row == 0)
+            if (row == 1)
+            {
+                // trigger fire critical animation
+                letterTiles[col][row].TriggerFireCritical();
+            }
+            else if (row == 0)
             {
                 // lose, the tile is at the bottom
                 OnLose();
