@@ -588,6 +588,12 @@ public class GameManager : Singleton<GameManager>
                 && ignoreTiles.IndexOf(new TilePos(col, row)) == -1)
             {
                 tilesToDestroy.Add(new TilePos(col, row - 1));
+                // if at least 2nd row and the tile below is going to be destroyed, show fire warning animation
+                // on the next lowest
+                if (row > 1 && letterTiles[col][row - 2].GetTileType() != LetterTile.TileType.Fire)
+                {
+                    letterTiles[col][row - 2].TriggerFireWarning();
+                }
             }
         }
         DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);

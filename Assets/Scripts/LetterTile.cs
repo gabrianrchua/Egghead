@@ -19,7 +19,12 @@ public class LetterTile : MonoBehaviour
     [SerializeField] private GameObject diamondSelectedSprite;
 
     private const float dropAnimationDuration = 0.5f;
+
     private static readonly int FireCriticalHash = Animator.StringToHash("FireCritical");
+    private static readonly int FireWarningHash = Animator.StringToHash("FireWarning");
+    private static readonly int DestroySelectedHash = Animator.StringToHash("DestroySelected");
+    private static readonly int DestroyFireHash = Animator.StringToHash("DestroyFire");
+    private static readonly int DestroyShuffleHash = Animator.StringToHash("DestroyShuffle");
 
     private char letter;
     private TileType tileType;
@@ -184,21 +189,21 @@ public class LetterTile : MonoBehaviour
         {
             // animation is 30 frames at 60fps
             EnableAnimator();
-            animator.SetTrigger("DestroySelected");
+            animator.SetTrigger(DestroySelectedHash);
             waitTime = 0.5f;
         }
         else if (reason == TileDestroyReason.Fire)
         {
             // animation is 50 frames at 60fps
             EnableAnimator();
-            animator.SetTrigger("DestroyFire");
+            animator.SetTrigger(DestroyFireHash);
             waitTime = 0.84f;
         }
         else if (reason == TileDestroyReason.Shuffled)
         {
             // animation is 30 frames at 60fps
             EnableAnimator();
-            animator.SetTrigger("DestroyShuffle");
+            animator.SetTrigger(DestroyShuffleHash);
             waitTime = 0.5f;
         }
         StartCoroutine(WaitThenDestroySelf(waitTime));
@@ -208,6 +213,12 @@ public class LetterTile : MonoBehaviour
     {
         EnableAnimator();
         animator.SetTrigger(FireCriticalHash);
+    }
+
+    public void TriggerFireWarning()
+    {
+        EnableAnimator();
+        animator.SetTrigger(FireWarningHash);
     }
 
     public void SetPosition(float x, float y, int column, int row)
