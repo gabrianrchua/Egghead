@@ -5,10 +5,6 @@ todo:
 === p2
 ? title: option to delete old saved game / start new game
 - animation when lose
-- stats tracking
-	- high score
-	- time spent
-	- number of words
 - menu functionality
 	- volume adjustment and apply, save
 - create sound effects
@@ -21,11 +17,21 @@ todo:
 - show warning modal first time fire tile reaches bottom
 
 === p3
+- stats tracking
+	- high score
+	- time spent
+	- number of words
+- egg character in game
 - high score leaderboard
 - create music
 	- classic
+	- title
+	- fire critical
+
+=== p4
+- add other modes
 	- arcade
 	- zen
-- add other modes
+- add other modes music
 	- arcade
 	- zen
