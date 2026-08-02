@@ -5,18 +5,17 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class LetterTile : MonoBehaviour
 {
+    [System.Serializable]
+    private class TileVisuals
+    {
+        public GameObject normal;
+        public GameObject selected;
+    }
+
     [SerializeField] private Animator animator;
     [SerializeField] private TMP_Text letterText;
-    [SerializeField] private GameObject normalSprite;
-    [SerializeField] private GameObject normalSelectedSprite;
-    [SerializeField] private GameObject fireSprite;
-    [SerializeField] private GameObject fireSelectedSprite;
-    [SerializeField] private GameObject bonusSprite;
-    [SerializeField] private GameObject bonusSelectedSprite;
-    [SerializeField] private GameObject goldSprite;
-    [SerializeField] private GameObject goldSelectedSprite;
-    [SerializeField] private GameObject diamondSprite;
-    [SerializeField] private GameObject diamondSelectedSprite;
+    [Tooltip("Order: Normal, Fire, Bonus, Gold, Diamond")]
+    [SerializeField] private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
 
     private const float dropAnimationDuration = 0.5f;
 
@@ -32,6 +31,16 @@ public class LetterTile : MonoBehaviour
     private int row; // x; inner index
     private bool isSelected;
     private bool isAnimating; // if animation is playing, disable touches
+    private GameObject activeSprite;
+
+    private void Awake()
+    {
+        foreach (TileVisuals visuals in tileVisuals)
+        {
+            visuals.normal.SetActive(false);
+            visuals.selected.SetActive(false);
+        }
+    }
 
     public TileType GetTileType()
     {
@@ -93,75 +102,28 @@ public class LetterTile : MonoBehaviour
     /// </summary>
     private void ApplySprite()
     {
-        // disable everything first
-        normalSprite.SetActive(false);
-        normalSelectedSprite.SetActive(false);
-        fireSprite.SetActive(false);
-        fireSelectedSprite.SetActive(false);
-        bonusSprite.SetActive(false);
-        bonusSelectedSprite.SetActive(false);
-        goldSprite.SetActive(false);
-        goldSelectedSprite.SetActive(false);
-        diamondSprite.SetActive(false);
-        diamondSelectedSprite.SetActive(false);
-
-        // enable the proper type
-        switch (tileType)
+        int typeIndex = (int)tileType;
+        if (typeIndex >= tileVisuals.Length)
         {
-            case TileType.Normal:
-                if (isSelected)
-                {
-                    normalSelectedSprite.SetActive(true);
-                }
-                else
-                {
-                    normalSprite.SetActive(true);
-                }
-                break;
-            case TileType.Fire:
-                if (isSelected)
-                {
-                    fireSelectedSprite.SetActive(true);
-                }
-                else
-                {
-                    fireSprite.SetActive(true);
-                }
-                break;
-            case TileType.Bonus:
-                if (isSelected)
-                {
-                    bonusSelectedSprite.SetActive(true);
-                }
-                else
-                {
-                    bonusSprite.SetActive(true);
-                }
-                break;
-            case TileType.Gold:
-                if (isSelected)
-                {
-                    goldSelectedSprite.SetActive(true);
-                }
-                else
-                {
-                    goldSprite.SetActive(true);
-                }
-                break;
-            case TileType.Diamond:
-                if (isSelected)
-                {
-                    diamondSelectedSprite.SetActive(true);
-                }
-                else
-                {
-                    diamondSprite.SetActive(true);
-                }
-                break;
-            default:
-                Debug.LogWarning("This LetterTile had an invalid TileType: " + tileType.ToString());
-                break;
+            Debug.LogWarning($"This LetterTile had an invalid TileType: {tileType}");
+            return;
         }
+
+        TileVisuals visuals = tileVisuals[typeIndex];
+        GameObject nextSprite = isSelected ? visuals.selected : visuals.normal;
+
+        if (activeSprite == nextSprite)
+        {
+            return;
+        }
+
+        if (activeSprite != null)
+        {
+            activeSprite.SetActive(false);
+        }
+
+        nextSprite.SetActive(true);
+        activeSprite = nextSprite;
     }
 
     public char GetLetter()
