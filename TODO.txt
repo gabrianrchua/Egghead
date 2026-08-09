@@ -1,6 +1,9 @@
 todo:
 
 === p1
+- bug: fire warning animation doesn't play in proper times
+	- when freshly spawned fire tile
+	- when fire tile cleared from above
 
 === p2
 ? title: option to delete old saved game / start new game

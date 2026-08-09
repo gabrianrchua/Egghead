@@ -2712,7 +2712,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1592355491}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &519420033
@@ -7531,6 +7532,192 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -286.8827}
   m_SizeDelta: {x: -42.976, y: 165.765}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1592355490
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1592355491}
+  - component: {fileID: 1592355492}
+  - component: {fileID: 1592355493}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1592355491
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592355490}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 519420032}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &1592355492
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592355490}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1592355493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592355490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16b0caf68b59b76438681fb324ae71e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  audioSource: {fileID: 1592355492}
+  soundList:
+  - name: TileBurn
+    sounds:
+    - {fileID: 8300000, guid: 2d300f2dfca9d004eb5101a47f22e8bf, type: 3}
+    pitchVariation: 0.1
+  - name: Shuffle
+    sounds:
+    - {fileID: 8300000, guid: b98a5c8617649274ea735fa448a62692, type: 3}
+    pitchVariation: 0.1
+  - name: TileSelected
+    sounds:
+    - {fileID: 8300000, guid: 81cbd7b000638a44b9df54b78384bbaa, type: 3}
+    pitchVariation: 0.05
+  - name: WordRegular
+    sounds:
+    - {fileID: 8300000, guid: d46662d15c3b6cc4386cf4f71528b0ff, type: 3}
+    pitchVariation: 0
+  - name: WordBonus
+    sounds:
+    - {fileID: 8300000, guid: 65ece453af105d44382255dbf190eeb1, type: 3}
+    pitchVariation: 0
+  - name: WordGold
+    sounds:
+    - {fileID: 8300000, guid: 1f9303aff7adc4f42b7321187c009ad1, type: 3}
+    pitchVariation: 0
+  - name: WordDiamond
+    sounds:
+    - {fileID: 8300000, guid: 995556bf48c4dfb41a0ee63bbecced15, type: 3}
+    pitchVariation: 0
+  - name: TilesStart
+    sounds:
+    - {fileID: 8300000, guid: 982b29dce7885134bb32c64d4f8823e3, type: 3}
+    pitchVariation: 0
+  - name: TileClick
+    sounds:
+    - {fileID: 8300000, guid: d4ef018b57fcb944690b83a112bebde8, type: 3}
+    - {fileID: 8300000, guid: dfa07971c249e7642976dc9e2bbe3d67, type: 3}
+    - {fileID: 8300000, guid: 009974b16b7e7474e93b710455bc7dfa, type: 3}
+    - {fileID: 8300000, guid: 01dabe2075bf4f7419116853b3ee8a92, type: 3}
+    - {fileID: 8300000, guid: 4e318021d4f13ab4791f8691a7b9b967, type: 3}
+    - {fileID: 8300000, guid: 4a30cba0cca66f549b7cc49b083e9ef2, type: 3}
+    - {fileID: 8300000, guid: 5d72ceccffd410b499e40747a7a53a90, type: 3}
+    pitchVariation: 0.1
 --- !u!1 &1592779548
 GameObject:
   m_ObjectHideFlags: 0
