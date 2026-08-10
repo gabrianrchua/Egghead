@@ -10,14 +10,11 @@ todo:
 - animation when lose
 - menu functionality
 	- volume adjustment and apply, save
-- create sound effects
-	- tile clinking
-	- tile selected, all types
-	- tile submitted
-	- tile burned
-	- valid word hovered
-	- shuffle
+- more sound effects
+	- lose burn / explosion?
+	- invalid word tried to send
 - show warning modal first time fire tile reaches bottom
+- QoL: show indication on how to submit word (click again)
 
 === p3
 - stats tracking

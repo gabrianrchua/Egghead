@@ -114,6 +114,7 @@ public class GameManager : Singleton<GameManager>
                 letterTiles[i] = current;
             }
         }
+        AudioManager.Instance.PlaySound(SoundType.TilesStart);
     }
 
     private async Task SaveGame()
@@ -262,6 +263,8 @@ public class GameManager : Singleton<GameManager>
                     // deselect the only tile selected
                     letterTiles[column][row].SetIsSelected(false);
                     selectedTiles.Clear();
+
+                    AudioManager.Instance.PlaySound(SoundType.TileSelected);
                 }
                 else
                 {
@@ -272,6 +275,7 @@ public class GameManager : Singleton<GameManager>
                     }
                     catch (System.InvalidOperationException)
                     {
+                        // TODO: add sound effect for invalid word
                         Debug.Log("User tried to submit invalid word!");
                         return;
                     }
@@ -279,6 +283,7 @@ public class GameManager : Singleton<GameManager>
             }
             else
             {
+                // if the user clicked some tile in the selected chain...
                 // deselect all after it
                 for (int i = index; i < selectedTiles.Count; i++)
                 {
@@ -290,6 +295,8 @@ public class GameManager : Singleton<GameManager>
                 // then, readd the selected tile
                 letterTiles[column][row].SetIsSelected(true);
                 selectedTiles.Add(new TilePos(column, row));
+
+                AudioManager.Instance.PlaySound(SoundType.TileSelected);
             }
         }
         else if (selectedTiles.Count == 0)
@@ -298,6 +305,8 @@ public class GameManager : Singleton<GameManager>
             // start new word if no selected tiles yet
             selectedTiles.Add(new TilePos(column, row));
             letterTiles[column][row].SetIsSelected(true);
+
+            AudioManager.Instance.PlaySound(SoundType.TileSelected);
         }
         else
         {
@@ -307,6 +316,8 @@ public class GameManager : Singleton<GameManager>
             {
                 letterTiles[column][row].SetIsSelected(true);
                 selectedTiles.Add(new TilePos(column, row));
+
+                AudioManager.Instance.PlaySound(SoundType.TileSelected);
             }
             else
             {
@@ -320,7 +331,7 @@ public class GameManager : Singleton<GameManager>
         }
 
         // update word UI
-        (string word, int score) = GetCurrentWord();
+        (string word, int score, LetterTile.TileType highestType) = GetCurrentWord();
         UIManager.Instance.SetCurrentWord(word);
         if (score == -1)
         {
@@ -329,6 +340,22 @@ public class GameManager : Singleton<GameManager>
         else
         {
             UIManager.Instance.SetCurrentWordScore(score);
+            switch (highestType)
+            {
+                case LetterTile.TileType.Normal:
+                case LetterTile.TileType.Fire:
+                    AudioManager.Instance.PlaySound(SoundType.WordRegular);
+                    break;
+                case LetterTile.TileType.Bonus:
+                    AudioManager.Instance.PlaySound(SoundType.WordBonus);
+                    break;
+                case LetterTile.TileType.Gold:
+                    AudioManager.Instance.PlaySound(SoundType.WordGold);
+                    break;
+                case LetterTile.TileType.Diamond:
+                    AudioManager.Instance.PlaySound(SoundType.WordDiamond);
+                    break;
+            }
         }
     }
 
@@ -349,7 +376,7 @@ public class GameManager : Singleton<GameManager>
     public void SubmitCurrentWord()
     {
         // first check if word is valid
-        (string word, int score) = GetCurrentWord();
+        (string word, int score, _) = GetCurrentWord();
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
 
         Debug.Log("Submitted word '" + word + "' for " + score.ToString());
@@ -370,12 +397,15 @@ public class GameManager : Singleton<GameManager>
 
         TilePos[] fireTilesCreated = DestroyTiles(selectedTiles.ToArray(), LetterTile.TileDestroyReason.Selected);
         selectedTiles.Clear();
+        AudioManager.Instance.PlaySound(SoundType.TileClick);
 
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
     }
 
     private void OnLose()
     {
+        // TODO: use real lose sound effect here
+        AudioManager.Instance.PlaySound(SoundType.TileBurn);
         Debug.Log("You lose!");
         _ = SaveManager.Instance.DeleteData();
         // TODO: save high score other stats etc.
@@ -422,6 +452,7 @@ public class GameManager : Singleton<GameManager>
                 }
             }
         }
+        AudioManager.Instance.PlaySound(SoundType.Shuffle);
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, newFireTiles.ToArray()));
     }
 
@@ -560,7 +591,6 @@ public class GameManager : Singleton<GameManager>
             // async; but we don't care about when it finishes
             _ = SaveGame();
             yield break;
-
         }
 
         // animate, blocking clicks
@@ -597,6 +627,10 @@ public class GameManager : Singleton<GameManager>
             }
         }
         DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
+        if (tilesToDestroy.Count > 0)
+        {
+            AudioManager.Instance.PlaySound(SoundType.TileBurn);
+        }
         isAnimating = false;
         // async; but we don't care about when it finishes
         _ = SaveGame();
@@ -660,16 +694,23 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Helper function to calculate the current word from the <c>selectedTiles</c> and return the score if applicable.
     /// </summary>
-    /// <returns>Tuple with the current word string and its score int, or -1 if not a valid word.</returns>
-    private (string, int) GetCurrentWord()
+    /// <returns>Tuple with the current word string, its score int (-1 if not a valid word), and the highest tile type in this word.</returns>
+    private (string, int, LetterTile.TileType) GetCurrentWord()
     {
+        LetterTile.TileType highestType = LetterTile.TileType.Normal;
+
         StringBuilder sb = new();
         float multiplier = 1f;
         foreach ((int col, int row) in selectedTiles)
         {
             LetterTile tile = letterTiles[col][row];
             char letter = tile.GetLetter();
-            multiplier *= tileTypeMultipliersDict[tile.GetTileType()];
+            LetterTile.TileType type = tile.GetTileType();
+            if ((int)type > (int)highestType)
+            {
+                highestType = type;
+            }
+            multiplier *= tileTypeMultipliersDict[type];
             sb.Append(letter == 'Q' ? "QU" : letter);
         }
         string word = sb.ToString().ToLower();
@@ -677,11 +718,11 @@ public class GameManager : Singleton<GameManager>
         try
         {
             Word wordDetails = csvReader.wordList.FindWord(word);
-            return (word, Mathf.FloorToInt(wordDetails.points * multiplier));
+            return (word, Mathf.FloorToInt(wordDetails.points * multiplier), highestType);
         }
         catch (System.InvalidOperationException)
         {
-            return (word, -1);
+            return (word, -1, LetterTile.TileType.Normal);
         }
     }
 
