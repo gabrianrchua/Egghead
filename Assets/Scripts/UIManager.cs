@@ -13,6 +13,8 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject validWordBackground;
     [SerializeField] private GameObject gameOverOverlay;
     [SerializeField] private TextMeshProUGUI gameOverText;
+    [SerializeField] private Slider soundVolumeSlider;
+    [SerializeField] private Slider musicVolumeSlider;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -63,5 +65,15 @@ public class UIManager : Singleton<UIManager>
     public void ChangeScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
+    }
+
+    public void SetSoundVolumeSliderValue(float volume)
+    {
+        soundVolumeSlider.value = volume;
+    }
+
+    public void SetMusicVolumeSliderValue(float volume)
+    {
+        musicVolumeSlider.value = volume;
     }
 }

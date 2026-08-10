@@ -619,7 +619,19 @@ MonoBehaviour:
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1592355493}
+        m_TargetAssemblyTypeName: AudioManager, Assembly-CSharp
+        m_MethodName: OnMusicSliderChanged
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &116585034
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7675,7 +7687,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16b0caf68b59b76438681fb324ae71e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
-  audioSource: {fileID: 1592355492}
+  soundAudioSource: {fileID: 1592355492}
+  musicAudioSource: {fileID: 1592355494}
   soundList:
   - name: TileBurn
     sounds:
@@ -8548,7 +8561,19 @@ MonoBehaviour:
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1592355493}
+        m_TargetAssemblyTypeName: AudioManager, Assembly-CSharp
+        m_MethodName: OnSoundSliderChanged
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &1742016582
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8813,6 +8838,8 @@ MonoBehaviour:
   validWordBackground: {fileID: 1346437832}
   gameOverOverlay: {fileID: 1293084476}
   gameOverText: {fileID: 65018958}
+  soundVolumeSlider: {fileID: 1730342711}
+  musicVolumeSlider: {fileID: 105916876}
 --- !u!1 &1790651287
 GameObject:
   m_ObjectHideFlags: 0

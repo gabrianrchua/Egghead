@@ -8,8 +8,6 @@ todo:
 === p2
 ? title: option to delete old saved game / start new game
 - animation when lose
-- menu functionality
-	- volume adjustment and apply, save
 - more sound effects
 	- lose burn / explosion?
 	- invalid word tried to send
