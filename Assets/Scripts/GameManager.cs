@@ -607,12 +607,14 @@ public class GameManager : Singleton<GameManager>
         // after waiting, destroy tiles under fire tiles
         List<TilePos> tilesToDestroy = new();
         List<TilePos> ignoreTiles = new(immuneFireTiles);
+        bool fireCriticalTriggered = false;
         foreach ((int col, int row) in fireTiles)
         {
             if (row == 1)
             {
                 // trigger fire critical animation
                 letterTiles[col][row].TriggerFireCritical();
+                fireCriticalTriggered = true;
             }
             else if (row == 0)
             {
@@ -626,6 +628,13 @@ public class GameManager : Singleton<GameManager>
             {
                 tilesToDestroy.Add(new TilePos(col, row - 1));
             }
+        }
+        if (fireCriticalTriggered && PlayerPrefs.GetInt("ShowFireCriticalModal", 1) == 1)
+        {
+            Modal.Instance.OpenModal(null, () =>
+            {
+                PlayerPrefs.SetInt("ShowFireCriticalModal", 0);
+            }, "Caution! A fire tile is critically close to burning up! Clear it this turn or it's game over!", "", "Okay");
         }
         DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
         if (tilesToDestroy.Count > 0)

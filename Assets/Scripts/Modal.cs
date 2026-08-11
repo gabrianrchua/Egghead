@@ -7,6 +7,7 @@ public class Modal : Singleton<Modal>
     [Header("Object references")]
     [SerializeField] private GameObject modalBackgroundObject;
     [SerializeField] private TextMeshProUGUI promptText;
+    [SerializeField] private GameObject negativeActionButton;
     [SerializeField] private TextMeshProUGUI negativeActionText;
     [SerializeField] private TextMeshProUGUI positiveActionText;
     [SerializeField] private Animator animator;
@@ -19,10 +20,10 @@ public class Modal : Singleton<Modal>
     /// <summary>
     /// Initializes and opens the modal, subscribing to events for this instance
     /// </summary>
-    /// <param name="negativeActionCallback">Action to invoke when the negative button is clicked</param>
+    /// <param name="negativeActionCallback">Action to invoke when the negative button is clicked.</param>
     /// <param name="positiveActionCallback">Action to invoke when the positive button is clicked</param>
     /// <param name="prompt">The text of the prompt on the modal</param>
-    /// <param name="negativeActionLabel">The text of the negative action</param>
+    /// <param name="negativeActionLabel">The text of the negative action. Pass in an empty string <c>""</c> to disable the button</param>
     /// <param name="positiveActionLabel">The text of the positive action</param>
     public void OpenModal(
         Action negativeActionCallback,
@@ -31,6 +32,7 @@ public class Modal : Singleton<Modal>
         string negativeActionLabel = "Cancel",
         string positiveActionLabel = "Yes")
     {
+        negativeActionButton.SetActive(negativeActionLabel != "");
         promptText.text = prompt;
         negativeActionText.text = negativeActionLabel;
         positiveActionText.text = positiveActionLabel;
