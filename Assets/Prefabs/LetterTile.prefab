@@ -1307,6 +1307,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 1646224789042219306}
   letterText: {fileID: 4855769770925336700}
+  fireWarningSpriteRenderer: {fileID: 629456928119461639}
   tileVisuals:
   - normal: {fileID: 4796725772610772746}
     selected: {fileID: 5950141299617781311}

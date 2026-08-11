@@ -21,6 +21,7 @@ public class GameManager : Singleton<GameManager>
     private Dictionary<LetterTile.TileType, float> tileTypeMultipliersDict;
     private List<LetterTile>[] letterTiles;
     private List<TilePos> selectedTiles;
+    private readonly HashSet<LetterTile> fireWarningTiles = new();
     private bool isAnimating;
     private float previousMoveScore;
 
@@ -115,6 +116,7 @@ public class GameManager : Singleton<GameManager>
             }
         }
         AudioManager.Instance.PlaySound(SoundType.TilesStart);
+        RefreshFireWarnings();
     }
 
     private async Task SaveGame()
@@ -433,6 +435,7 @@ public class GameManager : Singleton<GameManager>
                 {
                     // replace the tile with a new one
                     tile.DestroyTile(LetterTile.TileDestroyReason.Shuffled);
+                    fireWarningTiles.Remove(tile);
                     letterTiles[i].RemoveAt(j);
 
                     // if at the top of the list and this column needs a new fire tile, spawn it
@@ -453,6 +456,7 @@ public class GameManager : Singleton<GameManager>
             }
         }
         AudioManager.Instance.PlaySound(SoundType.Shuffle);
+        RefreshFireWarnings();
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, newFireTiles.ToArray()));
     }
 
@@ -504,6 +508,8 @@ public class GameManager : Singleton<GameManager>
             LetterTile tileToDestroy = letterTiles[col][row];
             tilesToDestroy.Add((col, tileToDestroy));
             tileToDestroy.DestroyTile(reason);
+            // The tile is being removed, so leave its destruction animation intact.
+            fireWarningTiles.Remove(tileToDestroy);
         }
         foreach ((int col, LetterTile tile) in tilesToDestroy)
         {
@@ -540,6 +546,7 @@ public class GameManager : Singleton<GameManager>
                 }
             }
         }
+        RefreshFireWarnings();
         return createdFireTiles.ToArray();
     }
 
@@ -618,12 +625,6 @@ public class GameManager : Singleton<GameManager>
                 && ignoreTiles.IndexOf(new TilePos(col, row)) == -1)
             {
                 tilesToDestroy.Add(new TilePos(col, row - 1));
-                // if at least 2nd row and the tile below is going to be destroyed, show fire warning animation
-                // on the next lowest
-                if (row > 1 && letterTiles[col][row - 2].GetTileType() != LetterTile.TileType.Fire)
-                {
-                    letterTiles[col][row - 2].TriggerFireWarning();
-                }
             }
         }
         DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
@@ -655,6 +656,46 @@ public class GameManager : Singleton<GameManager>
             }
         }
         return fireTiles.ToArray();
+    }
+
+    /// <summary>
+    /// Ensures that only non-fire tiles directly below an active fire tile display a fire warning.
+    /// </summary>
+    private void RefreshFireWarnings()
+    {
+        HashSet<LetterTile> nextWarningTiles = new();
+        foreach ((int col, int row) in GetAllFireTileLocations())
+        {
+            if (row == 0)
+            {
+                continue;
+            }
+
+            LetterTile tileBelow = letterTiles[col][row - 1];
+            if (tileBelow.GetTileType() != LetterTile.TileType.Fire)
+            {
+                nextWarningTiles.Add(tileBelow);
+            }
+        }
+
+        foreach (LetterTile tile in fireWarningTiles)
+        {
+            if (!nextWarningTiles.Contains(tile))
+            {
+                tile.UntriggerFireWarning();
+            }
+        }
+
+        foreach (LetterTile tile in nextWarningTiles)
+        {
+            if (!fireWarningTiles.Contains(tile))
+            {
+                tile.TriggerFireWarning();
+            }
+        }
+
+        fireWarningTiles.Clear();
+        fireWarningTiles.UnionWith(nextWarningTiles);
     }
 
     /// <summary>

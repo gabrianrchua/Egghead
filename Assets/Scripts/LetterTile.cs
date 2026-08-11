@@ -12,10 +12,13 @@ public class LetterTile : MonoBehaviour
         public GameObject selected;
     }
 
+    [Header("Object References")]
     [SerializeField] private Animator animator;
     [SerializeField] private TMP_Text letterText;
-    [Tooltip("Order: Normal, Fire, Bonus, Gold, Diamond")]
-    [SerializeField] private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
+    [SerializeField] private SpriteRenderer fireWarningSpriteRenderer;
+
+    [Tooltip("Order: Normal, Fire, Bonus, Gold, Diamond"), SerializeField]
+    private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
 
     private const float dropAnimationDuration = 0.5f;
 
@@ -183,6 +186,12 @@ public class LetterTile : MonoBehaviour
         animator.SetTrigger(FireWarningHash);
     }
 
+    public void UntriggerFireWarning()
+    {
+        DisableAnimator();
+        fireWarningSpriteRenderer.color = new Color(1f, 0f, 0f, 0f);
+    }
+
     public void SetPosition(float x, float y, int column, int row)
     {
         //transform.localPosition = new Vector3(x, y, 0);
@@ -222,9 +231,7 @@ public class LetterTile : MonoBehaviour
         Destroy(gameObject);
     }
 
-#pragma warning disable IDE0051 // (Remove unused private members) Used by animation
     private void DisableAnimator()
-#pragma warning restore IDE0051 // (Remove unused private members) Used by animation
     {
         animator.enabled = false;
     }
