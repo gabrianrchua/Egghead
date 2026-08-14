@@ -7,12 +7,6 @@ using UnityEngine.UI;
 
 public class TitleScreen : MonoBehaviour, IAuthStateListener
 {
-    private static readonly int ShakeHash = Animator.StringToHash("Shake");
-    private const int MinUsernameLength = 3;
-    private const int MaxUsernameLength = 20;
-    private const int MinPasswordLength = 8;
-    private const int MaxPasswordLength = 30;
-
     [Header("Register section")]
     [SerializeField] private GameObject registerPanel;
     [SerializeField] private TMP_InputField registerUsername;
@@ -38,6 +32,21 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [Header("Play button")]
     [SerializeField] private TMP_Text playButtonText;
 
+    [Header("Tutorial panel")]
+    [SerializeField] private Animator tutorialPanelAnimator;
+    [SerializeField] private GameObject[] tutorialPanels;
+    [SerializeField] private Button tutorialBackButton;
+    [SerializeField] private Button tutorialForwardButton;
+    [SerializeField] private TMP_Text tutorialForwardButtonText;
+
+    private int tutorialIndex = 0;
+
+    private static readonly int CloseHash = Animator.StringToHash("Close");
+    private static readonly int ShakeHash = Animator.StringToHash("Shake");
+    private const int MinUsernameLength = 3;
+    private const int MaxUsernameLength = 20;
+    private const int MinPasswordLength = 8;
+    private const int MaxPasswordLength = 30;
     private const string NewGameLabel = "New Game";
     private const string ContinueGameLabel = "Continue Game";
 
@@ -277,6 +286,61 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     {
         ApplySaveManagerState();
         _ = RefreshPlayButtonLabelAsync();
+    }
+    #endregion
+
+    #region Tutorial panel methods
+    public void ResetTutorial()
+    {
+        tutorialIndex = 0;
+
+        for (int i = 0; i < tutorialPanels.Length; i++)
+        {
+            tutorialPanels[i].SetActive(i == tutorialIndex);
+        }
+
+        tutorialBackButton.interactable = false;
+        tutorialForwardButton.interactable = tutorialPanels.Length > 0;
+        tutorialForwardButtonText.text = tutorialPanels.Length == 1 ? "Done" : "Next";
+    }
+    public void ForwardTutorial()
+    {
+        if (tutorialIndex >= tutorialPanels.Length - 1)
+        {
+            // close the tutorial panel
+            tutorialPanelAnimator.SetTrigger(CloseHash);
+            return;
+        }
+
+        tutorialPanels[tutorialIndex].SetActive(false);
+        tutorialIndex++;
+        tutorialPanels[tutorialIndex].SetActive(true);
+
+        tutorialBackButton.interactable = true;
+
+        if (tutorialIndex == tutorialPanels.Length - 1)
+        {
+            tutorialForwardButtonText.text = "Done";
+        }
+    }
+    public void BackTutorial()
+    {
+        if (tutorialIndex <= 0)
+        {
+            return;
+        }
+
+        tutorialPanels[tutorialIndex].SetActive(false);
+        tutorialIndex--;
+        tutorialPanels[tutorialIndex].SetActive(true);
+
+        tutorialForwardButton.interactable = true;
+        tutorialForwardButtonText.text = "Next";
+
+        if (tutorialIndex == 0)
+        {
+            tutorialBackButton.interactable = false;
+        }
     }
     #endregion
 }

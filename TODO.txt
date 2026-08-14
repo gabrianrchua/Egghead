@@ -1,14 +1,13 @@
 todo:
 
 === p1
+- show any bonuses in score card
 
 === p2
-? title: option to delete old saved game / start new game
 - animation when lose
 - more sound effects
 	- lose burn / explosion?
 	- invalid word tried to send
-- show warning modal first time fire tile reaches bottom
 - QoL: show indication on how to submit word (click again)
 
 === p3
