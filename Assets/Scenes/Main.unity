@@ -1839,7 +1839,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.705017, y: -117.1}
+  m_AnchoredPosition: {x: -2.7050781, y: -117.1}
   m_SizeDelta: {x: -23.409973, y: 61.537003}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &401690322
@@ -6156,7 +6156,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.25}
   m_AnchorMax: {x: 1, y: 0.75}
-  m_AnchoredPosition: {x: -5.000061, y: 0}
+  m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1336866404
@@ -7104,7 +7104,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.25}
   m_AnchorMax: {x: 1, y: 0.75}
-  m_AnchoredPosition: {x: -5.000061, y: 0}
+  m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1495467730
@@ -7285,7 +7285,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.705017, y: -43.6}
+  m_AnchoredPosition: {x: -2.7050781, y: -43.6}
   m_SizeDelta: {x: -23.409973, y: 61.537003}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1519582516
@@ -8938,7 +8938,7 @@ MonoBehaviour:
   levelText: {fileID: 163774161}
   scoreText: {fileID: 1801005545}
   levelScoreSlider: {fileID: 1200813644}
-  validWordBackground: {fileID: 1346437832}
+  validWordBackground: {fileID: 1346437834}
   gameOverOverlay: {fileID: 1293084476}
   gameOverText: {fileID: 65018958}
   soundVolumeSlider: {fileID: 1730342711}
@@ -10381,7 +10381,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -39.99994, y: -51.177956}
+  m_AnchoredPosition: {x: -40, y: -51.17798}
   m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2092777472

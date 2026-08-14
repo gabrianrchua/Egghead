@@ -341,7 +341,7 @@ public class GameManager : Singleton<GameManager>
         }
         else
         {
-            UIManager.Instance.SetCurrentWordScore(score);
+            UIManager.Instance.SetCurrentWordScore(score, highestType);
             switch (highestType)
             {
                 case LetterTile.TileType.Normal:

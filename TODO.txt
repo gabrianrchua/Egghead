@@ -1,7 +1,6 @@
 todo:
 
 === p1
-- show any bonuses in score card
 
 === p2
 - animation when lose

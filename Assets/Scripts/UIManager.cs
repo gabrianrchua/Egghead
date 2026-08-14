@@ -10,7 +10,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private Slider levelScoreSlider;
-    [SerializeField] private GameObject validWordBackground;
+    [SerializeField] private Image validWordBackground;
     [SerializeField] private GameObject gameOverOverlay;
     [SerializeField] private TextMeshProUGUI gameOverText;
     [SerializeField] private Slider soundVolumeSlider;
@@ -23,16 +23,34 @@ public class UIManager : Singleton<UIManager>
         currentWordText.text = word.ToUpper();
     }
 
-    public void SetCurrentWordScore(int score)
+    public void SetCurrentWordScore(int score, LetterTile.TileType highestTileType)
     {
         currentWordScore.text = score.ToString() + " points";
-        validWordBackground.SetActive(true);
+        switch(highestTileType)
+        {
+            case LetterTile.TileType.Normal:
+                validWordBackground.color = new Color32(255, 255, 255, 80);
+                break;
+            case LetterTile.TileType.Fire:
+                validWordBackground.color = new Color32(217, 114, 87, 80);
+                break;
+            case LetterTile.TileType.Bonus:
+                validWordBackground.color = new Color32(106, 190, 48, 80);
+                break;
+            case LetterTile.TileType.Gold:
+                validWordBackground.color = new Color32(250, 242, 54, 80);
+                break;
+            case LetterTile.TileType.Diamond:
+                validWordBackground.color = new Color32(0, 211, 255, 80);
+                break;
+        }
+        validWordBackground.gameObject.SetActive(true);
     }
 
     public void ClearCurrentWordScore()
     {
         currentWordScore.text = "";
-        validWordBackground.SetActive(false);
+        validWordBackground.gameObject.SetActive(false);
     }
 
     public void SetCurrentScore(int score, float scorePercentage)
