@@ -3,9 +3,6 @@ todo:
 === p1
 
 === p2
-- more sound effects
-	- lose burn / explosion?
-	- invalid word tried to send
 - QoL: show indication on how to submit word (click again)
 
 === p3

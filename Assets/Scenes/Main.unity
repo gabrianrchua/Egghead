@@ -7947,6 +7947,14 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 4a30cba0cca66f549b7cc49b083e9ef2, type: 3}
     - {fileID: 8300000, guid: 5d72ceccffd410b499e40747a7a53a90, type: 3}
     pitchVariation: 0.1
+  - name: Lose
+    sounds:
+    - {fileID: 8300000, guid: 6b5a111711aea0d48842a102259b821b, type: 3}
+    pitchVariation: 0
+  - name: InvalidWord
+    sounds:
+    - {fileID: 8300000, guid: 0ee22b567f6c0d64082c5a94cc2ab32f, type: 3}
+    pitchVariation: 0.1
 --- !u!82 &1592355494
 AudioSource:
   m_ObjectHideFlags: 0

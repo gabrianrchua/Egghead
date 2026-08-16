@@ -5,7 +5,6 @@ using System.Text;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -277,7 +276,7 @@ public class GameManager : Singleton<GameManager>
                     }
                     catch (System.InvalidOperationException)
                     {
-                        // TODO: add sound effect for invalid word
+                        AudioManager.Instance.PlaySound(SoundType.InvalidWord);
                         Debug.Log("User tried to submit invalid word!");
                         return;
                     }
@@ -406,8 +405,7 @@ public class GameManager : Singleton<GameManager>
 
     private void OnLose()
     {
-        // TODO: use real lose sound effect here
-        AudioManager.Instance.PlaySound(SoundType.TileBurn);
+        AudioManager.Instance.PlaySound(SoundType.Lose);
         Debug.Log("You lose!");
         _ = SaveManager.Instance.DeleteData();
         // TODO: save high score other stats etc.

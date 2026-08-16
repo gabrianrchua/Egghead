@@ -12,7 +12,9 @@ public enum SoundType
     WordGold,
     WordDiamond,
     TilesStart,
-    TileClick
+    TileClick,
+    Lose,
+    InvalidWord
 }
 
 [System.Serializable]
