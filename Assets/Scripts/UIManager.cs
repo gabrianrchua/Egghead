@@ -15,6 +15,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TextMeshProUGUI gameOverText;
     [SerializeField] private Slider soundVolumeSlider;
     [SerializeField] private Slider musicVolumeSlider;
+    [SerializeField] private GameObject gameOverAnimation;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -78,6 +79,8 @@ public class UIManager : Singleton<UIManager>
     {
         gameOverText.text = $"Score: {score}\nLevel {level}";
         gameOverOverlay.SetActive(true);
+
+        gameOverAnimation.SetActive(true);
     }
 
     public void ChangeScene(string sceneName)

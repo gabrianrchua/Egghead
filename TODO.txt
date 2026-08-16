@@ -3,7 +3,6 @@ todo:
 === p1
 
 === p2
-- animation when lose
 - more sound effects
 	- lose burn / explosion?
 	- invalid word tried to send
