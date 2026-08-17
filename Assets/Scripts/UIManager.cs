@@ -16,6 +16,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private Slider soundVolumeSlider;
     [SerializeField] private Slider musicVolumeSlider;
     [SerializeField] private GameObject gameOverAnimation;
+    [SerializeField] private Toggle lowFpsToggle;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -96,5 +97,10 @@ public class UIManager : Singleton<UIManager>
     public void SetMusicVolumeSliderValue(float volume)
     {
         musicVolumeSlider.value = volume;
+    }
+
+    public void SetLowFpsToggleValue(bool value)
+    {
+        lowFpsToggle.isOn = value;
     }
 }

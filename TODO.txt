@@ -4,12 +4,14 @@ todo:
 
 === p2
 - QoL: show indication on how to submit word (click again)
+	- allow clicking on score to submit
 
 === p3
 - stats tracking
 	- high score
 	- time spent
 	- number of words
+- level up modal with ^^ info
 - egg character in game
 - high score leaderboard
 - create music
