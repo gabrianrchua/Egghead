@@ -11,6 +11,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private Slider levelScoreSlider;
     [SerializeField] private Image validWordBackground;
+    [SerializeField] private GameObject validWordSubmitButton;
     [SerializeField] private GameObject gameOverOverlay;
     [SerializeField] private TextMeshProUGUI gameOverText;
     [SerializeField] private Slider soundVolumeSlider;
@@ -47,12 +48,14 @@ public class UIManager : Singleton<UIManager>
                 break;
         }
         validWordBackground.gameObject.SetActive(true);
+        validWordSubmitButton.SetActive(true);
     }
 
     public void ClearCurrentWordScore()
     {
         currentWordScore.text = "";
         validWordBackground.gameObject.SetActive(false);
+        validWordSubmitButton.SetActive(false);
     }
 
     public void SetCurrentScore(int score, float scorePercentage)

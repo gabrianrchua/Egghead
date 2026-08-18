@@ -379,7 +379,22 @@ public class GameManager : Singleton<GameManager>
         UIManager.Instance.ClearCurrentWordScore();
     }
 
-    public void SubmitCurrentWord()
+    /// <summary>
+    /// Public helper which tries to submit the current word if valid.
+    /// </summary>
+    public void TrySubmitCurrentWord()
+    {
+        try
+        {
+            SubmitCurrentWord();
+        }
+        catch
+        {
+            // no-op
+        }
+    }
+
+    private void SubmitCurrentWord()
     {
         // first check if word is valid
         (string word, int score, _) = GetCurrentWord();

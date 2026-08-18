@@ -3,14 +3,13 @@ todo:
 === p1
 
 === p2
-- allow clicking on score to submit
 
 === p3
 - stats tracking
 	- high score
 	- time spent
 	- number of words
-- level up modal with ^^ info
+- level up modal / graphics with ^^ info
 - egg character in game
 - high score leaderboard
 - create music
