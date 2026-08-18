@@ -3,6 +3,11 @@ todo:
 === p1
 
 === p2
+- create music
+	- classic
+	- title
+	- fire critical
+- show definitions for uncommon words
 
 === p3
 - stats tracking
@@ -12,10 +17,6 @@ todo:
 - level up modal / graphics with ^^ info
 - egg character in game
 - high score leaderboard
-- create music
-	- classic
-	- title
-	- fire critical
 
 === p4
 - add other modes
