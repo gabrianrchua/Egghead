@@ -16,6 +16,7 @@ public class LetterTile : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private TMP_Text letterText;
     [SerializeField] private SpriteRenderer fireWarningSpriteRenderer;
+    [SerializeField] private GameObject submitHint;
 
     [Tooltip("Order: Normal, Fire, Bonus, Gold, Diamond"), SerializeField]
     private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
@@ -239,5 +240,15 @@ public class LetterTile : MonoBehaviour
     private void EnableAnimator()
     {
         animator.enabled = true;
+    }
+
+    public void ShowSubmitHint()
+    {
+        submitHint.SetActive(true);
+    }
+
+    public void HideSubmitHint()
+    {
+        submitHint.SetActive(false);
     }
 }

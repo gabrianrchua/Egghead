@@ -3,8 +3,7 @@ todo:
 === p1
 
 === p2
-- QoL: show indication on how to submit word (click again)
-	- allow clicking on score to submit
+- allow clicking on score to submit
 
 === p3
 - stats tracking

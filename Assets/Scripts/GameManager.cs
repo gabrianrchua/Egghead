@@ -250,6 +250,8 @@ public class GameManager : Singleton<GameManager>
         // do not proceed if animating or overlay is blocking taps
         if (isAnimating || UIManager.Instance.IsOverlayActive) return;
 
+        HideCurrentSubmitHint();
+
         (int column, int row) = position;
 
         // if tile clicked is in the selected tiles list
@@ -341,6 +343,7 @@ public class GameManager : Singleton<GameManager>
         else
         {
             UIManager.Instance.SetCurrentWordScore(score, highestType);
+            ShowCurrentSubmitHint();
             switch (highestType)
             {
                 case LetterTile.TileType.Normal:
@@ -364,6 +367,8 @@ public class GameManager : Singleton<GameManager>
     {
         if (isAnimating || UIManager.Instance.IsOverlayActive || selectedTiles == null) return;
 
+        HideCurrentSubmitHint();
+
         foreach (TilePos tile in selectedTiles)
         {
             letterTiles[tile.Column][tile.Row].SetIsSelected(false);
@@ -379,6 +384,8 @@ public class GameManager : Singleton<GameManager>
         // first check if word is valid
         (string word, int score, _) = GetCurrentWord();
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
+
+        HideCurrentSubmitHint();
 
         Debug.Log("Submitted word '" + word + "' for " + score.ToString());
 
@@ -401,6 +408,22 @@ public class GameManager : Singleton<GameManager>
         AudioManager.Instance.PlaySound(SoundType.TileClick);
 
         StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
+    }
+
+    private void ShowCurrentSubmitHint()
+    {
+        if (selectedTiles.Count == 0) return;
+
+        TilePos lastTile = selectedTiles[^1];
+        letterTiles[lastTile.Column][lastTile.Row].ShowSubmitHint();
+    }
+
+    private void HideCurrentSubmitHint()
+    {
+        if (selectedTiles == null || selectedTiles.Count == 0) return;
+
+        TilePos lastTile = selectedTiles[^1];
+        letterTiles[lastTile.Column][lastTile.Row].HideSubmitHint();
     }
 
     private void OnLose()
