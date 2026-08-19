@@ -99,10 +99,8 @@ public class TouchscreenHandler : MonoBehaviour
         };
         List<RaycastResult> results = new();
         EventSystem.current.RaycastAll(pointerData, results);
-        string tmp = "";
         foreach (RaycastResult result in results)
         {
-            tmp += result.ToString() + "\n";
             if (result.module is GraphicRaycaster)
             {
                 return true;
