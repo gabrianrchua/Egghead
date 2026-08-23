@@ -9,6 +9,28 @@ using Egghead.SaveSystem;
 
 public class GameManager : Singleton<GameManager>
 {
+    private enum BoardOperationState
+    {
+        Initializing,
+        Idle,
+        Active,
+        GameOver
+    }
+
+    private readonly struct BoardMutationResult
+    {
+        public TilePos[] CreatedFireTiles { get; }
+        public List<LetterTile> MovingTiles { get; }
+        public float DestructionDuration { get; }
+
+        public BoardMutationResult(TilePos[] createdFireTiles, List<LetterTile> movingTiles, float destructionDuration)
+        {
+            CreatedFireTiles = createdFireTiles;
+            MovingTiles = movingTiles;
+            DestructionDuration = destructionDuration;
+        }
+    }
+
     [SerializeField] private CSVReader csvReader;
     [SerializeField] private LetterTile letterTilePrefab;
     [SerializeField] private float[] bonusTileTypeScoreMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
@@ -22,7 +44,11 @@ public class GameManager : Singleton<GameManager>
     private List<LetterTile>[] letterTiles;
     private List<TilePos> selectedTiles;
     private readonly HashSet<LetterTile> fireWarningTiles = new();
-    private bool isAnimating;
+    private BoardOperationState boardOperationState = BoardOperationState.Initializing;
+    private int activeBoardOperationCount;
+    private int maximumActiveBoardOperationCount;
+    private System.Func<Task> saveGameOverride = null;
+    private System.Func<Task> deleteDataOverride = null;
     private float previousMoveScore;
 
     private const float letterBaseYOdd = -4.5f;
@@ -30,7 +56,6 @@ public class GameManager : Singleton<GameManager>
     private const float letterDeltaY = 0.8f;
     private const float letterBaseX = -2.38f;
     private const float letterDeltaX = 0.8f;
-    private const float tileDropAnimationDuration = 0.5f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private async void Start()
@@ -111,6 +136,7 @@ public class GameManager : Singleton<GameManager>
         }
         AudioManager.Instance.PlaySound(SoundType.TilesStart);
         RefreshFireWarnings();
+        boardOperationState = BoardOperationState.Idle;
     }
 
     private async Task SaveGame()
@@ -243,8 +269,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="position">Position of the tile</param>
     public void OnTileClick(TilePos position)
     {
-        // do not proceed if animating or overlay is blocking taps
-        if (isAnimating || UIManager.Instance.IsOverlayActive) return;
+        if (IsBoardInputBlocked()) return;
 
         HideCurrentSubmitHint();
 
@@ -361,8 +386,13 @@ public class GameManager : Singleton<GameManager>
 
     public void DeselectAllTiles()
     {
-        if (isAnimating || UIManager.Instance.IsOverlayActive || selectedTiles == null) return;
+        if (IsBoardInputBlocked() || selectedTiles == null) return;
 
+        ResetSelectionState();
+    }
+
+    private void ResetSelectionState()
+    {
         HideCurrentSubmitHint();
 
         foreach (TilePos tile in selectedTiles)
@@ -380,6 +410,8 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void TrySubmitCurrentWord()
     {
+        if (IsBoardInputBlocked()) return;
+
         try
         {
             SubmitCurrentWord();
@@ -395,30 +427,39 @@ public class GameManager : Singleton<GameManager>
         // first check if word is valid
         (string word, int score, _) = GetCurrentWord();
         if (score == -1) throw new System.InvalidOperationException("Invalid word");
+        if (!TryBeginBoardOperation()) return;
 
-        HideCurrentSubmitHint();
+        try
+        {
+            HideCurrentSubmitHint();
 
-        Debug.Log("Submitted word '" + word + "' for " + score.ToString());
+            Debug.Log("Submitted word '" + word + "' for " + score.ToString());
 
-        // increment score and display
-        previousMoveScore = score;
+            // increment score and display
+            previousMoveScore = score;
 
-        // cache instances
-        LevelManager levelManager = LevelManager.Instance;
-        UIManager uiManager = UIManager.Instance;
+            // cache instances
+            LevelManager levelManager = LevelManager.Instance;
+            UIManager uiManager = UIManager.Instance;
 
-        levelManager.AddScore(score);
-        uiManager.SetLevel(levelManager.Level);
-        uiManager.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
-        uiManager.ClearCurrentWordScore();
-        uiManager.SetCurrentWord("");
-        // TODO: level up graphics
+            levelManager.AddScore(score);
+            uiManager.SetLevel(levelManager.Level);
+            uiManager.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
+            uiManager.ClearCurrentWordScore();
+            uiManager.SetCurrentWord("");
+            // TODO: level up graphics
 
-        TilePos[] fireTilesCreated = DestroyTiles(selectedTiles.ToArray(), LetterTile.TileDestroyReason.Selected);
-        selectedTiles.Clear();
-        AudioManager.Instance.PlaySound(SoundType.TileClick);
+            BoardMutationResult mutation = DestroyTiles(selectedTiles.ToArray(), LetterTile.TileDestroyReason.Selected);
+            selectedTiles.Clear();
+            AudioManager.Instance.PlaySound(SoundType.TileClick);
 
-        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, fireTilesCreated));
+            StartCoroutine(CompleteBoardOperation(mutation));
+        }
+        catch
+        {
+            EndBoardOperation();
+            throw;
+        }
     }
 
     private void ShowCurrentSubmitHint()
@@ -439,9 +480,18 @@ public class GameManager : Singleton<GameManager>
 
     private async void OnLose()
     {
+        EnterGameOverState();
         AudioManager.Instance.PlaySound(SoundType.Lose);
         Debug.Log("You lose!");
-        Task deletion = SaveManager.Instance.DeleteData();
+        Task deletion;
+        try
+        {
+            deletion = deleteDataOverride?.Invoke() ?? SaveManager.Instance.DeleteData();
+        }
+        catch (System.Exception ex)
+        {
+            deletion = Task.FromException(ex);
+        }
         // TODO: save high score other stats etc.
         LevelManager levelManager = LevelManager.Instance;
         UIManager.Instance.ShowGameOverOverlay(levelManager.Level, levelManager.TotalScore);
@@ -463,42 +513,57 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void ShuffleTiles()
     {
-        int numFireTiles = Mathf.RoundToInt(Random.Range(1f, 3f));
-        int[] fireTileLocations = SelectArrayPositions(letterTiles.Length, numFireTiles);
-        List<TilePos> newFireTiles = new(numFireTiles);
+        if (!TryBeginBoardOperation()) return;
 
-        for (int i = 0; i < letterTiles.Length; i++)
+        try
         {
-            for (int j = 0; j < letterTiles[i].Count; j++)
+            ResetSelectionState();
+
+            int numFireTiles = Mathf.RoundToInt(Random.Range(1f, 3f));
+            int[] fireTileLocations = SelectArrayPositions(letterTiles.Length, numFireTiles);
+            List<TilePos> newFireTiles = new(numFireTiles);
+
+            for (int i = 0; i < letterTiles.Length; i++)
             {
-                LetterTile tile = letterTiles[i][j];
-                if (tile.GetTileType() != LetterTile.TileType.Fire)
+                for (int j = 0; j < letterTiles[i].Count; j++)
                 {
-                    // replace the tile with a new one
-                    tile.DestroyTile(LetterTile.TileDestroyReason.Shuffled);
-                    fireWarningTiles.Remove(tile);
-                    letterTiles[i].RemoveAt(j);
-
-                    // if at the top of the list and this column needs a new fire tile, spawn it
-                    bool isEven = i % 2 == 0;
-                    int numTiles = isEven ? 7 : 8;
-                    if (j == numTiles - 1 && fireTileLocations.Contains(i))
+                    LetterTile tile = letterTiles[i][j];
+                    if (tile.GetTileType() != LetterTile.TileType.Fire)
                     {
-                        TilePos position = new(i, j);
-                        newFireTiles.Add(position);
-                        letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Fire, position));
-                    }
-                    else
-                    {
-                        letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
-                    }
+                        // replace the tile with a new one
+                        tile.DestroyTile(LetterTile.TileDestroyReason.Shuffled);
+                        fireWarningTiles.Remove(tile);
+                        letterTiles[i].RemoveAt(j);
 
+                        // if at the top of the list and this column needs a new fire tile, spawn it
+                        bool isEven = i % 2 == 0;
+                        int numTiles = isEven ? 7 : 8;
+                        if (j == numTiles - 1 && fireTileLocations.Contains(i))
+                        {
+                            TilePos position = new(i, j);
+                            newFireTiles.Add(position);
+                            letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Fire, position));
+                        }
+                        else
+                        {
+                            letterTiles[i].Insert(j, InstantiateNewTile(LetterTile.TileType.Normal, new TilePos(i, j)));
+                        }
+                    }
                 }
             }
+            AudioManager.Instance.PlaySound(SoundType.Shuffle);
+            RefreshFireWarnings();
+            BoardMutationResult mutation = new(
+                newFireTiles.ToArray(),
+                new List<LetterTile>(),
+                LetterTile.GetDestroyAnimationDuration(LetterTile.TileDestroyReason.Shuffled));
+            StartCoroutine(CompleteBoardOperation(mutation));
         }
-        AudioManager.Instance.PlaySound(SoundType.Shuffle);
-        RefreshFireWarnings();
-        StartCoroutine(WaitThenDestroyTilesUnderFire(tileDropAnimationDuration, newFireTiles.ToArray()));
+        catch
+        {
+            EndBoardOperation();
+            throw;
+        }
     }
 
     /// <summary>
@@ -537,8 +602,8 @@ public class GameManager : Singleton<GameManager>
     /// <param name="reason">Reason for tile destruction, where <c>TileDestroyReason.Selected</c> is
     ///     because the user submitted them, and <c>TileDestroyReason.Fire</c> is because they was
     ///     destroyed by fire</param>
-    /// <returns>List of locations of fire tiles that were created</returns>
-    private TilePos[] DestroyTiles(TilePos[] tileLocations, LetterTile.TileDestroyReason reason)
+    /// <returns>Details needed to wait for the mutation's visual completion</returns>
+    private BoardMutationResult DestroyTiles(TilePos[] tileLocations, LetterTile.TileDestroyReason reason)
     {
         LevelManager levelManager = LevelManager.Instance;
 
@@ -559,6 +624,7 @@ public class GameManager : Singleton<GameManager>
 
         // refresh board and tell new tiles their new positions
         List<TilePos> createdFireTiles = new();
+        List<LetterTile> movingTiles = new();
         for (int i = 0; i < letterTiles.Length; i++)
         {
             // even index should have 7 tiles, odd should have 8
@@ -582,13 +648,19 @@ public class GameManager : Singleton<GameManager>
                 {
                     // need to tell existing tile what its position is
                     (float x, float y) = CalculateTilePositionFromTilePos(new TilePos(i, j));
-                    letterTiles[i][j].SetPosition(x, y, i, j);
+                    if (letterTiles[i][j].SetPositionAndReportMovement(x, y, i, j))
+                    {
+                        movingTiles.Add(letterTiles[i][j]);
+                    }
                     letterTiles[i][j].SetIsSelected(false);
                 }
             }
         }
         RefreshFireWarnings();
-        return createdFireTiles.ToArray();
+        float destructionDuration = tileLocations.Length == 0
+            ? 0f
+            : LetterTile.GetDestroyAnimationDuration(reason);
+        return new BoardMutationResult(createdFireTiles.ToArray(), movingTiles, destructionDuration);
     }
 
     /// <summary>
@@ -623,66 +695,124 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// Waits duration (disabling clicks), allowing animation to play
-    /// before destroying any tiles that are under a fire tile
+    /// Waits for an accepted board operation's visual phases, then advances fire and saves.
     /// </summary>
-    /// <param name="duration">Duration to block inputs and before destroying tiles under fire</param>
-    /// <param name="immuneFireTiles">Fire tiles that will not burn this turn
-    ///     (basically fire tires that have just been created)</param>
-    /// <returns>Nothing, <c>null</c></returns>
-    private IEnumerator WaitThenDestroyTilesUnderFire(float duration, TilePos[] immuneFireTiles)
+    private IEnumerator CompleteBoardOperation(BoardMutationResult initialMutation)
     {
-        // do not wait if no fire tiles are on the board
-        TilePos[] fireTiles = GetAllFireTileLocations();
-        if (fireTiles.Length == 0)
+        bool reachedGameOver = false;
+        try
         {
-            ObserveSave(SaveGame());
-            yield break;
-        }
+            yield return WaitForMutationCompletion(initialMutation);
 
-        // animate, blocking clicks
-        isAnimating = true;
-        yield return new WaitForSeconds(duration);
-
-        // after waiting, destroy tiles under fire tiles
-        List<TilePos> tilesToDestroy = new();
-        List<TilePos> ignoreTiles = new(immuneFireTiles);
-        bool fireCriticalTriggered = false;
-        foreach ((int col, int row) in fireTiles)
-        {
-            if (row == 1)
+            TilePos[] fireTiles = GetAllFireTileLocations();
+            if (fireTiles.Length == 0)
             {
-                // trigger fire critical animation
-                letterTiles[col][row].TriggerFireCritical();
-                fireCriticalTriggered = true;
-            }
-            else if (row == 0)
-            {
-                // lose, the tile is at the bottom
-                OnLose();
+                QueueGameplaySave();
                 yield break;
             }
-            // only destroy if tile below is not a fire type, and is not on the list of fire tiles to ignore
-            if (letterTiles[col][row - 1].GetTileType() != LetterTile.TileType.Fire
-                && ignoreTiles.IndexOf(new TilePos(col, row)) == -1)
+
+            List<TilePos> tilesToDestroy = new();
+            List<TilePos> ignoreTiles = new(initialMutation.CreatedFireTiles);
+            bool fireCriticalTriggered = false;
+            foreach ((int col, int row) in fireTiles)
             {
-                tilesToDestroy.Add(new TilePos(col, row - 1));
+                if (row == 1)
+                {
+                    letterTiles[col][row].TriggerFireCritical();
+                    fireCriticalTriggered = true;
+                }
+                else if (row == 0)
+                {
+                    reachedGameOver = true;
+                    OnLose();
+                    yield break;
+                }
+                if (letterTiles[col][row - 1].GetTileType() != LetterTile.TileType.Fire
+                    && ignoreTiles.IndexOf(new TilePos(col, row)) == -1)
+                {
+                    tilesToDestroy.Add(new TilePos(col, row - 1));
+                }
+            }
+            if (fireCriticalTriggered && PlayerPrefs.GetInt("ShowFireCriticalModal", 1) == 1)
+            {
+                Modal.Instance.OpenModal(null, () =>
+                {
+                    PlayerPrefs.SetInt("ShowFireCriticalModal", 0);
+                }, "Caution! A fire tile is critically close to burning up! Clear it this turn or it's game over!", "", "Okay");
+            }
+            BoardMutationResult fireMutation = DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
+            if (tilesToDestroy.Count > 0)
+            {
+                AudioManager.Instance.PlaySound(SoundType.TileBurn);
+            }
+            yield return WaitForMutationCompletion(fireMutation);
+            QueueGameplaySave();
+        }
+        finally
+        {
+            if (!reachedGameOver)
+            {
+                EndBoardOperation();
             }
         }
-        if (fireCriticalTriggered && PlayerPrefs.GetInt("ShowFireCriticalModal", 1) == 1)
+    }
+
+    private IEnumerator WaitForMutationCompletion(BoardMutationResult mutation)
+    {
+        if (mutation.DestructionDuration > 0f)
         {
-            Modal.Instance.OpenModal(null, () =>
-            {
-                PlayerPrefs.SetInt("ShowFireCriticalModal", 0);
-            }, "Caution! A fire tile is critically close to burning up! Clear it this turn or it's game over!", "", "Okay");
+            yield return new WaitForSeconds(mutation.DestructionDuration);
         }
-        DestroyTiles(tilesToDestroy.ToArray(), LetterTile.TileDestroyReason.Fire);
-        if (tilesToDestroy.Count > 0)
+
+        while (mutation.MovingTiles.Any(tile => tile != null && tile.IsDropAnimating))
         {
-            AudioManager.Instance.PlaySound(SoundType.TileBurn);
+            yield return null;
         }
-        isAnimating = false;
-        ObserveSave(SaveGame());
+    }
+
+    private bool IsBoardInputBlocked()
+    {
+        return boardOperationState != BoardOperationState.Idle || UIManager.Instance.IsOverlayActive;
+    }
+
+    private bool TryBeginBoardOperation()
+    {
+        if (IsBoardInputBlocked()) return false;
+
+        boardOperationState = BoardOperationState.Active;
+        activeBoardOperationCount++;
+        maximumActiveBoardOperationCount = Mathf.Max(maximumActiveBoardOperationCount, activeBoardOperationCount);
+        Debug.Assert(activeBoardOperationCount == 1, "More than one board operation became active.");
+        return true;
+    }
+
+    private void EndBoardOperation()
+    {
+        if (boardOperationState != BoardOperationState.Active) return;
+
+        activeBoardOperationCount = Mathf.Max(0, activeBoardOperationCount - 1);
+        boardOperationState = BoardOperationState.Idle;
+    }
+
+    private void EnterGameOverState()
+    {
+        if (boardOperationState == BoardOperationState.Active)
+        {
+            activeBoardOperationCount = Mathf.Max(0, activeBoardOperationCount - 1);
+        }
+        boardOperationState = BoardOperationState.GameOver;
+    }
+
+    private void QueueGameplaySave()
+    {
+        try
+        {
+            ObserveSave(saveGameOverride?.Invoke() ?? SaveGame());
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Gameplay save failed: " + ex.Message);
+        }
     }
 
     /// <summary>Observe a queued gameplay save without blocking input or discarding failures.</summary>

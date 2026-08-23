@@ -22,7 +22,7 @@ public class LetterTile : MonoBehaviour
     [Tooltip("Order: Normal, Fire, Bonus, Gold, Diamond"), SerializeField]
     private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
 
-    private const float dropAnimationDuration = 0.5f;
+    internal const float DropAnimationDuration = 0.5f;
 
     private static readonly int FireCriticalHash = Animator.StringToHash("FireCritical");
     private static readonly int FireWarningHash = Animator.StringToHash("FireWarning");
@@ -143,29 +143,31 @@ public class LetterTile : MonoBehaviour
 
     public void DestroyTile(TileDestroyReason reason)
     {
-        float waitTime = 0f;
+        float waitTime = GetDestroyAnimationDuration(reason);
         if (reason == TileDestroyReason.Selected)
         {
             // animation is 30 frames at 60fps
             EnableAnimator();
             animator.SetTrigger(DestroySelectedHash);
-            waitTime = 0.5f;
         }
         else if (reason == TileDestroyReason.Fire)
         {
             // animation is 50 frames at 60fps
             EnableAnimator();
             animator.SetTrigger(DestroyFireHash);
-            waitTime = 0.84f;
         }
         else if (reason == TileDestroyReason.Shuffled)
         {
             // animation is 30 frames at 60fps
             EnableAnimator();
             animator.SetTrigger(DestroyShuffleHash);
-            waitTime = 0.5f;
         }
         StartCoroutine(WaitThenDestroySelf(waitTime));
+    }
+
+    internal static float GetDestroyAnimationDuration(TileDestroyReason reason)
+    {
+        return reason == TileDestroyReason.Fire ? 0.84f : 0.5f;
     }
 
     public void TriggerFireCritical()
@@ -188,16 +190,25 @@ public class LetterTile : MonoBehaviour
 
     public void SetPosition(float x, float y, int column, int row)
     {
+        SetPositionAndReportMovement(x, y, column, row);
+    }
+
+    internal bool SetPositionAndReportMovement(float x, float y, int column, int row)
+    {
         //transform.localPosition = new Vector3(x, y, 0);
-        if (Mathf.Abs(transform.position.y - y) > 0.1f)
+        bool moved = Mathf.Abs(transform.position.y - y) > 0.1f;
+        if (moved)
         {
             // we moved, play drop animation
-            StartCoroutine(PlayDropAnimation(transform.position.y, y, dropAnimationDuration));
+            StartCoroutine(PlayDropAnimation(transform.position.y, y, DropAnimationDuration));
         }
 
         this.column = column;
         this.row = row;
+        return moved;
     }
+
+    internal bool IsDropAnimating => isAnimating;
 
     private IEnumerator PlayDropAnimation(float originalY, float destinationY, float duration)
     {

@@ -2,4 +2,5 @@
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Egghead.SaveSystem.Tests.csproj" />
   <Project Path="Egghead.SaveSystem.csproj" />
+  <Project Path="Egghead.Gameplay.Tests.csproj" />
 </Solution>
