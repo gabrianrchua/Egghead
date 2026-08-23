@@ -22,6 +22,8 @@ Egghead is built with **Unity 6.4** (`6000.4.6f1`).
 
 The title and gameplay scenes are already included in Build Settings. Local saves work without a cloud connection; authentication and cloud saves require the project to be linked to a configured Unity Gaming Services project.
 
+Egghead supports portrait and upside-down portrait orientations. The officially tested display range is from 3:4 through 9:21 (width:height); landscape orientations are not supported.
+
 ## Project structure
 
 ```text
