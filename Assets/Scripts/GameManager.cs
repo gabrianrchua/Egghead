@@ -437,14 +437,23 @@ public class GameManager : Singleton<GameManager>
         letterTiles[lastTile.Column][lastTile.Row].HideSubmitHint();
     }
 
-    private void OnLose()
+    private async void OnLose()
     {
         AudioManager.Instance.PlaySound(SoundType.Lose);
         Debug.Log("You lose!");
-        _ = SaveManager.Instance.DeleteData();
+        Task deletion = SaveManager.Instance.DeleteData();
         // TODO: save high score other stats etc.
         LevelManager levelManager = LevelManager.Instance;
         UIManager.Instance.ShowGameOverOverlay(levelManager.Level, levelManager.TotalScore);
+
+        try
+        {
+            await deletion;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Game-over save deletion failed: " + ex.Message);
+        }
     }
 
     /// <summary>
@@ -627,8 +636,7 @@ public class GameManager : Singleton<GameManager>
         TilePos[] fireTiles = GetAllFireTileLocations();
         if (fireTiles.Length == 0)
         {
-            // async; but we don't care about when it finishes
-            _ = SaveGame();
+            ObserveSave(SaveGame());
             yield break;
         }
 
@@ -674,8 +682,20 @@ public class GameManager : Singleton<GameManager>
             AudioManager.Instance.PlaySound(SoundType.TileBurn);
         }
         isAnimating = false;
-        // async; but we don't care about when it finishes
-        _ = SaveGame();
+        ObserveSave(SaveGame());
+    }
+
+    /// <summary>Observe a queued gameplay save without blocking input or discarding failures.</summary>
+    private async void ObserveSave(Task saveTask)
+    {
+        try
+        {
+            await saveTask;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Gameplay save failed: " + ex.Message);
+        }
     }
 
     /// <summary>

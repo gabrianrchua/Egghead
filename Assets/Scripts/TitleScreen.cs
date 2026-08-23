@@ -198,8 +198,18 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     /// </summary>
     private async Task DeleteSaveDataAndRefreshAsync()
     {
-        await SaveManager.Instance.DeleteData();
-        await RefreshPlayButtonLabelAsync();
+        try
+        {
+            await SaveManager.Instance.DeleteData();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to delete saved game data: " + ex.Message);
+        }
+        finally
+        {
+            await RefreshPlayButtonLabelAsync();
+        }
     }
 
     /// <summary>

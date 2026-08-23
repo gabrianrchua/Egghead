@@ -4,7 +4,6 @@ using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using Egghead.SaveSystem;
 using SaveData = Egghead.SaveSystem.SaveData;
 
@@ -19,6 +18,7 @@ public class SaveManager : Singleton<SaveManager>
     private SaveData _currentSaveData;
     private System.DateTime _currentSaveDataExpires = default;
     private Task _initializationTask;
+    private SaveOperationCoordinator _saveCoordinator;
     private bool cloudAvailable;
     private bool localOnlyMode;
     private bool eventsSetup;
@@ -61,6 +61,7 @@ public class SaveManager : Singleton<SaveManager>
         DontDestroyOnLoad(gameObject);
 
         localOnlyMode = PlayerPrefs.GetInt(LocalOnlyModeKey, 0) == 1;
+        _saveCoordinator = new SaveOperationCoordinator(new UnitySaveMutationBackend(this), new UnitySaveLogger());
 
         // Intentional non-await: kick off and save initialization task, but don't block execution
         _initializationTask = Initialize();
@@ -211,7 +212,8 @@ public class SaveManager : Singleton<SaveManager>
         InvalidateSaveCache();
 
         SaveData localSave = (await ReconcileSaveDataAsync(false)).Data;
-        await SaveCloudSaveDataAsync(localSave);
+        SaveWriteRequest request = _saveCoordinator.CaptureSave(localSave);
+        await _saveCoordinator.EnqueueSave(request, SaveMutationTargets.Cloud);
 
         foreach (IAuthStateListener listener in authStateListeners)
         {
@@ -313,49 +315,28 @@ public class SaveManager : Singleton<SaveManager>
     /// Save progress locally, then save the same JSON payload to Cloud Save when cloud is active.
     /// </summary>
     /// <param name="data">Progress snapshot to save.</param>
-    public async Task SaveGame(SaveData data)
+    public Task SaveGame(SaveData data)
     {
         data.SchemaVersion = SaveDataValidator.CurrentSchemaVersion;
         SaveValidationResult validation = SaveDataValidator.ValidateAndNormalize(data);
         if (!validation.IsValid)
         {
-            Debug.LogError("Refusing to save invalid game data: " + validation.Reason);
-            return;
+            string message = "Refusing to save invalid game data: " + validation.Reason;
+            Debug.LogError(message);
+            return Task.FromException(new System.ArgumentException(message, nameof(data)));
         }
 
         data = validation.Data;
-        bool savedLocal = false;
-        try
+        SaveWriteRequest request = _saveCoordinator.CaptureSave(data);
+        SaveMutationTargets targets = SaveMutationTargets.Local;
+        if (IsCloudActive)
         {
-            WriteLocalSaveData(data);
-            savedLocal = true;
-            Debug.Log("Saved game data to local file: " + data.ToPrettyString());
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to save game data to local file: " + ex.Message);
+            targets |= SaveMutationTargets.Cloud;
         }
 
-        if (savedLocal)
-        {
-            InvalidateSaveCache();
-        }
-
-        if (!IsCloudActive)
-        {
-            return;
-        }
-
-        try
-        {
-            await SaveCloudSaveDataAsync(data);
-            InvalidateSaveCache();
-            Debug.Log("Saved game data to CloudSave");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to save game data to CloudSave: " + ex.Message);
-        }
+        Task operation = _saveCoordinator.EnqueueSave(request, targets);
+        InvalidateSaveCache();
+        return operation;
     }
 
     /// <summary>
@@ -395,23 +376,28 @@ public class SaveManager : Singleton<SaveManager>
         return (await ReconcileSaveDataAsync(IsCloudActive)).Data;
     }
 
-    private Task<SaveReconciliationResult> ReconcileSaveDataAsync(bool includeCloud)
+    private async Task<SaveReconciliationResult> ReconcileSaveDataAsync(bool includeCloud)
     {
-        ILocalSaveStorage localStorage = new LocalSaveStorage(GetSaveFilePath());
-        ISaveStorage cloudStorage = includeCloud ? new CloudSaveStorage() : null;
-        SaveReconciler reconciler = new(localStorage, cloudStorage, new UnitySaveLogger());
-        return reconciler.ReconcileAsync();
-    }
+        while (true)
+        {
+            await _saveCoordinator.WaitForIdleAsync();
+            SaveOperationEpoch capturedEpoch = _saveCoordinator.CaptureEpoch();
+            LocalSaveStorage rawLocal = new(GetSaveFilePath());
+            CloudSaveStorage rawCloud = includeCloud ? new CloudSaveStorage() : null;
+            ILocalSaveStorage localStorage = new CoordinatedLocalSaveStorage(rawLocal, _saveCoordinator, capturedEpoch);
+            ISaveStorage cloudStorage = rawCloud == null
+                ? null
+                : new CoordinatedCloudSaveStorage(rawCloud, _saveCoordinator, capturedEpoch);
+            SaveReconciler reconciler = new(localStorage, cloudStorage, new UnitySaveLogger());
+            SaveReconciliationResult result = await reconciler.ReconcileAsync();
 
-    private async Task SaveCloudSaveDataAsync(SaveData data)
-    {
-        await new CloudSaveStorage().WriteAsync(JsonConvert.SerializeObject(data));
-    }
+            if (_saveCoordinator.IsCurrent(capturedEpoch))
+            {
+                return result;
+            }
 
-    private void WriteLocalSaveData(SaveData data)
-    {
-        string json = JsonConvert.SerializeObject(data);
-        System.IO.File.WriteAllText(GetSaveFilePath(), json);
+            Debug.LogWarning("Save deletion overlapped reconciliation; retrying against the current generation.");
+        }
     }
 
     private sealed class LocalSaveStorage : ILocalSaveStorage
@@ -432,8 +418,18 @@ public class SaveManager : Singleton<SaveManager>
 
         public Task WriteAsync(string json)
         {
-            System.IO.File.WriteAllText(path, json);
+            WriteNow(json);
             return Task.CompletedTask;
+        }
+
+        public void WriteNow(string json) => System.IO.File.WriteAllText(path, json);
+
+        public void DeleteNow()
+        {
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
         }
 
         public Task BackupInvalidAsync()
@@ -468,6 +464,94 @@ public class SaveManager : Singleton<SaveManager>
         }
     }
 
+    private sealed class CoordinatedLocalSaveStorage : ILocalSaveStorage
+    {
+        private readonly LocalSaveStorage storage;
+        private readonly SaveOperationCoordinator coordinator;
+        private readonly SaveOperationEpoch epoch;
+
+        public CoordinatedLocalSaveStorage(LocalSaveStorage storage, SaveOperationCoordinator coordinator, SaveOperationEpoch epoch)
+        {
+            this.storage = storage;
+            this.coordinator = coordinator;
+            this.epoch = epoch;
+        }
+
+        public string Name => storage.Name;
+        public Task<string> ReadAsync() => storage.ReadAsync();
+        public Task BackupInvalidAsync()
+        {
+            return coordinator.IsCurrent(epoch) ? storage.BackupInvalidAsync() : Task.CompletedTask;
+        }
+
+        public Task WriteAsync(string json)
+        {
+            SaveData data = SaveJson.Deserialize(json);
+            SaveWriteRequest request = coordinator.CaptureSave(data, epoch);
+            return coordinator.EnqueueSave(request, SaveMutationTargets.Local);
+        }
+    }
+
+    private sealed class CoordinatedCloudSaveStorage : ISaveStorage
+    {
+        private readonly CloudSaveStorage storage;
+        private readonly SaveOperationCoordinator coordinator;
+        private readonly SaveOperationEpoch epoch;
+
+        public CoordinatedCloudSaveStorage(CloudSaveStorage storage, SaveOperationCoordinator coordinator, SaveOperationEpoch epoch)
+        {
+            this.storage = storage;
+            this.coordinator = coordinator;
+            this.epoch = epoch;
+        }
+
+        public string Name => storage.Name;
+        public Task<string> ReadAsync() => storage.ReadAsync();
+
+        public Task WriteAsync(string json)
+        {
+            SaveData data = SaveJson.Deserialize(json);
+            SaveWriteRequest request = coordinator.CaptureSave(data, epoch);
+            return coordinator.EnqueueSave(request, SaveMutationTargets.Cloud);
+        }
+    }
+
+    private sealed class UnitySaveMutationBackend : ISaveMutationBackend
+    {
+        private readonly SaveManager manager;
+
+        public UnitySaveMutationBackend(SaveManager manager)
+        {
+            this.manager = manager;
+        }
+
+        public void WriteLocal(string json)
+        {
+            new LocalSaveStorage(manager.GetSaveFilePath()).WriteNow(json);
+            Debug.Log("Saved game data to local file: " + SaveJson.Deserialize(json).ToPrettyString());
+        }
+
+        public void DeleteLocal()
+        {
+            new LocalSaveStorage(manager.GetSaveFilePath()).DeleteNow();
+        }
+
+        public async Task WriteCloudAsync(string json)
+        {
+            await new CloudSaveStorage().WriteAsync(json);
+            manager.InvalidateSaveCache();
+            Debug.Log("Saved game data to CloudSave");
+        }
+
+        public async Task DeleteCloudAsync()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            await CloudSaveService.Instance.Data.Player.DeleteAsync(CloudSaveDataKey);
+#pragma warning restore CS0618 // Type or member is obsolete
+            manager.InvalidateSaveCache();
+        }
+    }
+
     private sealed class UnitySaveLogger : ISaveReconciliationLogger
     {
         public void Info(string message) => Debug.Log(message);
@@ -497,44 +581,10 @@ public class SaveManager : Singleton<SaveManager>
     /// <summary>
     /// Delete the local save file and delete the cloud save key when cloud save is active.
     /// </summary>
-    public async Task DeleteData()
+    public Task DeleteData()
     {
-        bool deletedLocal = false;
-        try
-        {
-            string path = GetSaveFilePath();
-            if (System.IO.File.Exists(path))
-            {
-                System.IO.File.Delete(path);
-            }
-
-            deletedLocal = true;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to delete game data from local file: " + ex.Message);
-        }
-
-        if (deletedLocal)
-        {
-            InvalidateSaveCache();
-        }
-
-        if (!IsCloudActive)
-        {
-            return;
-        }
-
-        try
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            await CloudSaveService.Instance.Data.Player.DeleteAsync(CloudSaveDataKey);
-#pragma warning restore CS0618 // Type or member is obsolete
-            InvalidateSaveCache();
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to delete game data from CloudSave: " + ex.Message);
-        }
+        Task operation = _saveCoordinator.EnqueueDelete(IsCloudActive);
+        InvalidateSaveCache();
+        return operation;
     }
 }
