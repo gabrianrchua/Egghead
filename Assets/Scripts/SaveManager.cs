@@ -5,6 +5,7 @@ using Unity.Services.CloudSave;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Egghead.SaveSystem;
+using Egghead.Authentication;
 using SaveData = Egghead.SaveSystem.SaveData;
 
 /// <summary>
@@ -22,7 +23,8 @@ public class SaveManager : Singleton<SaveManager>
     private bool cloudAvailable;
     private bool localOnlyMode;
     private bool eventsSetup;
-    private List<IAuthStateListener> authStateListeners = new();
+    private readonly AuthStateListenerRegistry authStateListeners = new();
+    private IAuthEventSource authEventSource;
 
     /// <summary>
     /// Returns whether Cloud Save should be used for this session.
@@ -124,11 +126,17 @@ public class SaveManager : Singleton<SaveManager>
     /// <param name="listener">The listener to register, which implements interface <c>IAuthStateListener</c></param>
     public void RegisterAuthListener(IAuthStateListener listener)
     {
-        authStateListeners.Add(listener);
-        AuthenticationService.Instance.SignedIn += listener.OnSignedIn;
-        AuthenticationService.Instance.SignInFailed += listener.OnSignInFailed;
-        AuthenticationService.Instance.SignedOut += listener.OnSignedOut;
-        AuthenticationService.Instance.Expired += listener.OnExpired;
+        authStateListeners.Register(listener);
+    }
+
+    /// <summary>
+    /// Stop delivering authentication lifecycle events to a previously registered listener.
+    /// Repeated calls and calls made before Unity Services initialization are safe.
+    /// </summary>
+    /// <param name="listener">The listener to unregister.</param>
+    public void UnregisterAuthListener(IAuthStateListener listener)
+    {
+        authStateListeners.Unregister(listener);
     }
 
     /// <summary>
@@ -136,37 +144,42 @@ public class SaveManager : Singleton<SaveManager>
     /// </summary>
     private void SetupEvents()
     {
-        if (eventsSetup)
+        if (!eventsSetup)
         {
-            return;
+            AuthenticationService.Instance.SignedIn += () =>
+            {
+                // Authentication raises SignedIn before the awaiting sign-in method resumes.
+                // Set this first so UI listeners observe an active cloud session.
+                cloudAvailable = true;
+                Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
+            };
+
+            AuthenticationService.Instance.SignInFailed += (err) =>
+            {
+                Debug.LogError(err);
+            };
+
+            AuthenticationService.Instance.SignedOut += () =>
+            {
+                Debug.Log("Player signed out.");
+            };
+
+            AuthenticationService.Instance.Expired += () =>
+            {
+                cloudAvailable = false;
+                InvalidateSaveCache();
+                Debug.Log("Player session could not be refreshed and expired.");
+            };
+
+            eventsSetup = true;
         }
 
-        AuthenticationService.Instance.SignedIn += () =>
+        // Attach UI listeners after the manager's own handlers so they observe the updated cloud state.
+        if (authEventSource == null)
         {
-            // Authentication raises SignedIn before the awaiting sign-in method resumes.
-            // Set this first so UI listeners observe an active cloud session.
-            cloudAvailable = true;
-            Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
-        };
-
-        AuthenticationService.Instance.SignInFailed += (err) =>
-        {
-            Debug.LogError(err);
-        };
-
-        AuthenticationService.Instance.SignedOut += () =>
-        {
-            Debug.Log("Player signed out.");
-        };
-
-        AuthenticationService.Instance.Expired += () =>
-        {
-            cloudAvailable = false;
-            InvalidateSaveCache();
-            Debug.Log("Player session could not be refreshed and expired.");
-        };
-
-        eventsSetup = true;
+            authEventSource = new UnityAuthenticationEventSource(AuthenticationService.Instance);
+            authStateListeners.SetEventSource(authEventSource);
+        }
     }
 
     /// <summary>
@@ -215,10 +228,7 @@ public class SaveManager : Singleton<SaveManager>
         SaveWriteRequest request = _saveCoordinator.CaptureSave(localSave);
         await _saveCoordinator.EnqueueSave(request, SaveMutationTargets.Cloud);
 
-        foreach (IAuthStateListener listener in authStateListeners)
-        {
-            listener?.OnSignedIn();
-        }
+        authStateListeners.NotifySignedIn();
     }
 
     /// <summary>
@@ -245,10 +255,7 @@ public class SaveManager : Singleton<SaveManager>
 
         await ReconcileSaveDataAsync(true);
 
-        foreach (IAuthStateListener listener in authStateListeners)
-        {
-            listener?.OnSignedIn();
-        }
+        authStateListeners.NotifySignedIn();
     }
 
     /// <summary>

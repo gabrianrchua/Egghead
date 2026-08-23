@@ -1,0 +1,13 @@
+{
+  "name": "Egghead.Authentication.Tests",
+  "references": [
+    "Egghead.Authentication",
+    "Unity.Services.Core"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

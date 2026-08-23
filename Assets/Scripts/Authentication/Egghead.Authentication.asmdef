@@ -1,0 +1,8 @@
+{
+  "name": "Egghead.Authentication",
+  "rootNamespace": "Egghead.Authentication",
+  "references": [
+    "Unity.Services.Authentication",
+    "Unity.Services.Core"
+  ]
+}

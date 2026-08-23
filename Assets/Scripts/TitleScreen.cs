@@ -66,6 +66,14 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         _ = RefreshPlayButtonLabelAsync();
     }
 
+    private void OnDestroy()
+    {
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.UnregisterAuthListener(this);
+        }
+    }
+
     private void ApplySaveManagerState()
     {
         SaveManager saveManager = SaveManager.Instance;
