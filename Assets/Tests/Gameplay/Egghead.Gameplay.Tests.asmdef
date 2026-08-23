@@ -1,6 +1,9 @@
 {
   "name": "Egghead.Gameplay.Tests",
-  "references": [],
+  "references": [
+    "Egghead.Authentication",
+    "Unity.Services.Core"
+  ],
   "optionalUnityReferences": [
     "TestAssemblies"
   ],

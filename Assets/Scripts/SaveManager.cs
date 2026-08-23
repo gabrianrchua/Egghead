@@ -25,6 +25,7 @@ public class SaveManager : Singleton<SaveManager>
     private bool eventsSetup;
     private readonly AuthStateListenerRegistry authStateListeners = new();
     private IAuthEventSource authEventSource;
+    private IAuthenticationSession authenticationSession;
 
     /// <summary>
     /// Returns whether Cloud Save should be used for this session.
@@ -34,7 +35,7 @@ public class SaveManager : Singleton<SaveManager>
     /// <summary>
     /// Returns whether Unity Authentication currently has a signed-in player.
     /// </summary>
-    public bool IsSignedIn => AuthenticationService.Instance != null && AuthenticationService.Instance.IsSignedIn;
+    public bool IsSignedIn => GetAuthenticationSession()?.IsSignedIn == true;
 
     /// <summary>
     /// Current Unity Authentication player data, or <c>null</c> when signed out.
@@ -161,6 +162,8 @@ public class SaveManager : Singleton<SaveManager>
 
             AuthenticationService.Instance.SignedOut += () =>
             {
+                cloudAvailable = false;
+                InvalidateSaveCache();
                 Debug.Log("Player signed out.");
             };
 
@@ -180,6 +183,8 @@ public class SaveManager : Singleton<SaveManager>
             authEventSource = new UnityAuthenticationEventSource(AuthenticationService.Instance);
             authStateListeners.SetEventSource(authEventSource);
         }
+
+        authenticationSession ??= new UnityAuthenticationSession(AuthenticationService.Instance);
     }
 
     /// <summary>
@@ -264,25 +269,45 @@ public class SaveManager : Singleton<SaveManager>
     /// </summary>
     public void SignOutToLocalOnly()
     {
+        SetLocalOnlyMode(true);
+        cloudAvailable = false;
+        InvalidateSaveCache();
+
+        bool signedOutEventReceived = false;
+        System.Action observeSignedOut = () => signedOutEventReceived = true;
+        if (authEventSource != null)
+        {
+            authEventSource.SignedOut += observeSignedOut;
+        }
+
         try
         {
-            if (AuthenticationService.Instance != null && AuthenticationService.Instance.IsSignedIn)
+            IAuthenticationSession session = GetAuthenticationSession();
+            if (session?.IsSignedIn == true)
             {
-                AuthenticationService.Instance.SignOut(true);
+                session.SignOut(true);
             }
-            else if (AuthenticationService.Instance != null)
+            else if (session != null)
             {
-                AuthenticationService.Instance.ClearSessionToken();
+                session.ClearSessionToken();
             }
         }
         catch (System.Exception ex)
         {
             Debug.LogError("Failed to clear authentication session: " + ex.Message);
         }
+        finally
+        {
+            if (authEventSource != null)
+            {
+                authEventSource.SignedOut -= observeSignedOut;
+            }
+        }
 
-        SetLocalOnlyMode(true);
-        cloudAvailable = false;
-        InvalidateSaveCache();
+        if (!signedOutEventReceived)
+        {
+            authStateListeners.NotifySignedOut();
+        }
     }
 
     /// <summary>
@@ -583,6 +608,16 @@ public class SaveManager : Singleton<SaveManager>
     private void InvalidateSaveCache()
     {
         _currentSaveDataExpires = default;
+    }
+
+    private IAuthenticationSession GetAuthenticationSession()
+    {
+        if (authenticationSession == null && AuthenticationService.Instance != null)
+        {
+            authenticationSession = new UnityAuthenticationSession(AuthenticationService.Instance);
+        }
+
+        return authenticationSession;
     }
 
     /// <summary>

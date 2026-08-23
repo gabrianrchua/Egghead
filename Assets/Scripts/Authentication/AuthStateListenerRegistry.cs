@@ -61,6 +61,8 @@ namespace Egghead.Authentication
 
         public void NotifySignedIn() => OnSignedIn();
 
+        public void NotifySignedOut() => OnSignedOut();
+
         private void OnSignedIn()
         {
             Dispatch(listener => listener.OnSignedIn());
