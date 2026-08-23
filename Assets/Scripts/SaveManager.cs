@@ -5,43 +5,14 @@ using Unity.Services.CloudSave;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Egghead.SaveSystem;
+using SaveData = Egghead.SaveSystem.SaveData;
 
 /// <summary>
 /// Coordinates local save files, Unity Authentication, and Unity Cloud Save for game progress.
 /// </summary>
 public class SaveManager : Singleton<SaveManager>
 {
-    /// <summary>
-    /// Serializable snapshot of the player's current progress and board state.
-    /// </summary>
-    [System.Serializable]
-    public struct SaveData
-    {
-        /// <summary>
-        /// Total score at the time this save was created.
-        /// </summary>
-        public int Score;
-
-        /// <summary>
-        /// UTC timestamp used to resolve conflicts between local and cloud saves.
-        /// </summary>
-        public System.DateTime Timestamp;
-
-        /// <summary>
-        /// Serialized tile grid. <c>null</c> means a new game should be initialized.
-        /// </summary>
-        public LetterTile.LetterTileData[][] LetterTileData;
-
-        /// <summary>
-        /// Create a short human-readable description of this save for debug logs.
-        /// </summary>
-        /// <returns>Formatted timestamp and score.</returns>
-        public readonly string ToPrettyString()
-        {
-            return $"[{Timestamp.ToShortDateString()} {Timestamp.ToShortTimeString()}] {Score}";
-        }
-    }
-
     private const string LocalOnlyModeKey = "SaveManager.LocalOnlyMode";
     private const string CloudSaveDataKey = "saveDataJson";
 
@@ -239,7 +210,7 @@ public class SaveManager : Singleton<SaveManager>
         cloudAvailable = true;
         InvalidateSaveCache();
 
-        SaveData localSave = LoadLocalOrNew();
+        SaveData localSave = (await ReconcileSaveDataAsync(false)).Data;
         await SaveCloudSaveDataAsync(localSave);
 
         foreach (IAuthStateListener listener in authStateListeners)
@@ -270,12 +241,7 @@ public class SaveManager : Singleton<SaveManager>
         cloudAvailable = true;
         InvalidateSaveCache();
 
-        (bool cloudLoaded, SaveData cloudSave) = await TryLoadCloudSaveDataAsync();
-        bool localLoaded = TryLoadLocalSaveData(out SaveData localSave);
-
-        SaveData winner = ChooseNewestSave(cloudLoaded, cloudSave, localLoaded, localSave);
-        WriteLocalSaveData(winner);
-        await SaveCloudSaveDataAsync(winner);
+        await ReconcileSaveDataAsync(true);
 
         foreach (IAuthStateListener listener in authStateListeners)
         {
@@ -326,11 +292,7 @@ public class SaveManager : Singleton<SaveManager>
         cloudAvailable = true;
         InvalidateSaveCache();
 
-        (bool cloudLoaded, SaveData cloudSave) = await TryLoadCloudSaveDataAsync();
-        bool localLoaded = TryLoadLocalSaveData(out SaveData localSave);
-        SaveData winner = ChooseNewestSave(cloudLoaded, cloudSave, localLoaded, localSave);
-        WriteLocalSaveData(winner);
-        await SaveCloudSaveDataAsync(winner);
+        await ReconcileSaveDataAsync(true);
     }
 
     /// <summary>
@@ -353,6 +315,15 @@ public class SaveManager : Singleton<SaveManager>
     /// <param name="data">Progress snapshot to save.</param>
     public async Task SaveGame(SaveData data)
     {
+        data.SchemaVersion = SaveDataValidator.CurrentSchemaVersion;
+        SaveValidationResult validation = SaveDataValidator.ValidateAndNormalize(data);
+        if (!validation.IsValid)
+        {
+            Debug.LogError("Refusing to save invalid game data: " + validation.Reason);
+            return;
+        }
+
+        data = validation.Data;
         bool savedLocal = false;
         try
         {
@@ -413,10 +384,7 @@ public class SaveManager : Singleton<SaveManager>
         return saveData.LetterTileData != null;
     }
 
-    /// <summary>
-    /// Load from Cloud Save when active, mirror successful cloud loads locally, and fall back to local/new data.
-    /// </summary>
-    /// <returns>The loaded save data, or a new save if no valid data exists.</returns>
+    /// <summary>Load and reconcile independently inspected local and cloud save candidates.</summary>
     private async Task<SaveData> LoadGame()
     {
         if (_initializationTask != null)
@@ -424,160 +392,87 @@ public class SaveManager : Singleton<SaveManager>
             await _initializationTask;
         }
 
-        if (IsCloudActive)
-        {
-            try
-            {
-                (bool cloudLoaded, SaveData cloudSave) = await TryLoadCloudSaveDataAsync();
-                if (cloudLoaded)
-                {
-                    WriteLocalSaveData(cloudSave);
-                    Debug.Log("Loaded game data from CloudSave: " + cloudSave.ToPrettyString());
-                    return cloudSave;
-                }
-
-                Debug.LogWarning("CloudSave did not contain save data; falling back to local file.");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError("Failed to load game data from CloudSave: " + ex.Message + "; falling back to local file");
-            }
-        }
-
-        return LoadLocalOrNew();
+        return (await ReconcileSaveDataAsync(IsCloudActive)).Data;
     }
 
-    /// <summary>
-    /// Try to load and deserialize the single Cloud Save JSON key.
-    /// </summary>
-    /// <returns>
-    /// <c>loaded</c> is true when valid cloud data was found; <c>data</c> contains the loaded save.
-    /// </returns>
-    private async Task<(bool loaded, SaveData data)> TryLoadCloudSaveDataAsync()
+    private Task<SaveReconciliationResult> ReconcileSaveDataAsync(bool includeCloud)
     {
-        SaveData data = default;
-
-        Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
-            await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string> { CloudSaveDataKey });
-
-        if (!playerData.TryGetValue(CloudSaveDataKey, out var saveJsonItem))
-        {
-            return (false, data);
-        }
-
-        string json = saveJsonItem.Value.GetAs<string>();
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return (false, data);
-        }
-
-        data = JsonConvert.DeserializeObject<SaveData>(json);
-        bool loaded = data.Timestamp != default || data.Score != 0 || data.LetterTileData != null;
-        return (loaded, data);
+        ILocalSaveStorage localStorage = new LocalSaveStorage(GetSaveFilePath());
+        ISaveStorage cloudStorage = includeCloud ? new CloudSaveStorage() : null;
+        SaveReconciler reconciler = new(localStorage, cloudStorage, new UnitySaveLogger());
+        return reconciler.ReconcileAsync();
     }
 
-    /// <summary>
-    /// Serialize and write save data to the Cloud Save <c>saveDataJson</c> key.
-    /// </summary>
-    /// <param name="data">Progress snapshot to upload.</param>
     private async Task SaveCloudSaveDataAsync(SaveData data)
     {
-        Dictionary<string, object> dataToSave = new()
-        {
-            { CloudSaveDataKey, JsonConvert.SerializeObject(data) }
-        };
-
-        await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+        await new CloudSaveStorage().WriteAsync(JsonConvert.SerializeObject(data));
     }
 
-    /// <summary>
-    /// Load local save data, or create a new save if the local file is missing or invalid.
-    /// </summary>
-    /// <returns>Valid local save data or a new save.</returns>
-    private SaveData LoadLocalOrNew()
-    {
-        if (TryLoadLocalSaveData(out SaveData data))
-        {
-            Debug.Log("Loaded game data from local file: " + data.ToPrettyString());
-            return data;
-        }
-
-        Debug.LogWarning("No valid local save data found; returning new game data.");
-        return CreateNewSaveData();
-    }
-
-    /// <summary>
-    /// Try to read and deserialize the local save file.
-    /// </summary>
-    /// <param name="data">Loaded save data when successful; otherwise the default value.</param>
-    /// <returns><c>true</c> when the local save exists and contains meaningful save data.</returns>
-    private bool TryLoadLocalSaveData(out SaveData data)
-    {
-        data = default;
-
-        try
-        {
-            string json = System.IO.File.ReadAllText(GetSaveFilePath());
-            data = JsonConvert.DeserializeObject<SaveData>(json);
-            return data.Timestamp != default || data.Score != 0 || data.LetterTileData != null;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Failed to load game from local file: " + ex.Message);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Serialize and write save data to the local save file.
-    /// </summary>
-    /// <param name="data">Progress snapshot to write.</param>
     private void WriteLocalSaveData(SaveData data)
     {
         string json = JsonConvert.SerializeObject(data);
         System.IO.File.WriteAllText(GetSaveFilePath(), json);
     }
 
-    /// <summary>
-    /// Select the newest save by timestamp when both local and cloud saves are available.
-    /// </summary>
-    /// <param name="hasCloudSave">Whether <paramref name="cloudSave"/> contains valid data.</param>
-    /// <param name="cloudSave">Cloud Save progress snapshot.</param>
-    /// <param name="hasLocalSave">Whether <paramref name="localSave"/> contains valid data.</param>
-    /// <param name="localSave">Local progress snapshot.</param>
-    /// <returns>The newest valid save, or a new save when neither source is valid.</returns>
-    private SaveData ChooseNewestSave(bool hasCloudSave, SaveData cloudSave, bool hasLocalSave, SaveData localSave)
+    private sealed class LocalSaveStorage : ILocalSaveStorage
     {
-        if (hasCloudSave && hasLocalSave)
+        private readonly string path;
+
+        public LocalSaveStorage(string path)
         {
-            return cloudSave.Timestamp >= localSave.Timestamp ? cloudSave : localSave;
+            this.path = path;
         }
 
-        if (hasCloudSave)
+        public string Name => "local";
+
+        public Task<string> ReadAsync()
         {
-            return cloudSave;
+            return Task.FromResult(System.IO.File.Exists(path) ? System.IO.File.ReadAllText(path) : null);
         }
 
-        if (hasLocalSave)
+        public Task WriteAsync(string json)
         {
-            return localSave;
+            System.IO.File.WriteAllText(path, json);
+            return Task.CompletedTask;
         }
 
-        return CreateNewSaveData();
+        public Task BackupInvalidAsync()
+        {
+            if (!System.IO.File.Exists(path))
+            {
+                return Task.CompletedTask;
+            }
+
+            string directory = System.IO.Path.GetDirectoryName(path);
+            string fileName = $"save.invalid.{System.DateTime.UtcNow:yyyyMMddTHHmmssfffZ}.json";
+            System.IO.File.Move(path, System.IO.Path.Combine(directory, fileName));
+            return Task.CompletedTask;
+        }
     }
 
-    /// <summary>
-    /// Create an empty save that tells the game to initialize a new board.
-    /// </summary>
-    /// <returns>New save data with zero score, current timestamp, and no tile data.</returns>
-    private SaveData CreateNewSaveData()
+    private sealed class CloudSaveStorage : ISaveStorage
     {
-        return new SaveData
+        public string Name => "cloud";
+
+        public async Task<string> ReadAsync()
         {
-            Score = 0,
-            Timestamp = System.DateTime.UtcNow,
-            LetterTileData = null
-        };
+            Dictionary<string, Unity.Services.CloudSave.Models.Item> playerData =
+                await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string> { CloudSaveDataKey });
+            return playerData.TryGetValue(CloudSaveDataKey, out var item) ? item.Value.GetAs<string>() : null;
+        }
+
+        public async Task WriteAsync(string json)
+        {
+            Dictionary<string, object> dataToSave = new() { { CloudSaveDataKey, json } };
+            await CloudSaveService.Instance.Data.Player.SaveAsync(dataToSave);
+        }
+    }
+
+    private sealed class UnitySaveLogger : ISaveReconciliationLogger
+    {
+        public void Info(string message) => Debug.Log(message);
+        public void Warning(string message) => Debug.LogWarning(message);
+        public void Error(string message) => Debug.LogError(message);
     }
 
     /// <summary>

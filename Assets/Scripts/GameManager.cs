@@ -5,6 +5,7 @@ using System.Text;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using Egghead.SaveSystem;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -59,7 +60,7 @@ public class GameManager : Singleton<GameManager>
         ui.SetCurrentWord("");
 
         // load saved game or create new game depending on save data
-        SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+        SaveData data = await SaveManager.Instance.GetCurrentSaveData();
         if (data.LetterTileData == null)
         {
             Debug.Log("Initializing as new game");
@@ -87,7 +88,7 @@ public class GameManager : Singleton<GameManager>
         {
             Debug.Log("Initializing as saved game");
             // load saved game
-            LetterTile.LetterTileData[][] tileData = data.LetterTileData;
+            SavedLetterTileData[][] tileData = data.LetterTileData;
             for (int i = 0; i < letterTiles.Length; i++)
             {
                 List<LetterTile> current = new();
@@ -100,13 +101,7 @@ public class GameManager : Singleton<GameManager>
                     float x = letterBaseX + (letterDeltaX * i);
                     float y = isEven ? letterBaseYEven + (letterDeltaY * j) : letterBaseYOdd + (letterDeltaY * j);
                     LetterTile newTile = Instantiate(letterTilePrefab, new Vector3(x, y, 0), Quaternion.identity, transform);
-                    LetterTile.LetterTileData currentTileData = tileData[i][j];
-                    if (i != currentTileData.column || j != currentTileData.row)
-                    {
-                        // note: ignoring tileData column and row for now
-                        // TODO: upon save data error, fall back to new game
-                        Debug.LogWarning($"Save data misalignment! Expected i={i} j={j} but got column={currentTileData.column} row={currentTileData.row}");
-                    }
+                    SavedLetterTileData currentTileData = tileData[i][j];
                     newTile.Initialize(currentTileData.letter, i, j, (LetterTile.TileType)currentTileData.tileType);
                     current.Add(newTile);
                 }
@@ -120,8 +115,9 @@ public class GameManager : Singleton<GameManager>
 
     private async Task SaveGame()
     {
-        SaveManager.SaveData saveData = new()
+        SaveData saveData = new()
         {
+            SchemaVersion = SaveDataValidator.CurrentSchemaVersion,
             Score = LevelManager.Instance.TotalScore,
             Timestamp = System.DateTime.UtcNow,
             LetterTileData = GetLetterTileData()
@@ -130,17 +126,17 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// Export <c>letterTiles</c> as <c>LetterTile.LetterTileData[][]</c> jagged array for
+    /// Export <c>letterTiles</c> as a saved tile-data jagged array for
     /// the purpose of saving
     /// </summary>
     /// <returns>Jagged array of <c>LetterTileData</c> representation of the current board</returns>
-    public LetterTile.LetterTileData[][] GetLetterTileData()
+    public SavedLetterTileData[][] GetLetterTileData()
     {
-        LetterTile.LetterTileData[][] data = new LetterTile.LetterTileData[letterTiles.Length][];
+        SavedLetterTileData[][] data = new SavedLetterTileData[letterTiles.Length][];
 
         for (int i = 0; i < letterTiles.Length; i++)
         {
-            List<LetterTile.LetterTileData> column = new();
+            List<SavedLetterTileData> column = new();
             for (int j = 0; j < letterTiles[i].Count; j++)
             {
                 column.Add(letterTiles[i][j].ToLetterTileData());
@@ -167,7 +163,7 @@ public class GameManager : Singleton<GameManager>
         int totalBoardLetters = Mathf.Max(1, boardCounts.Values.Sum());
 
         float[] adjustedWeights = new float[baseWeights.Length];
-        float adjustmentPower = 0.7f; // tuning parameter (0.5 – 1.0 ideal)
+        float adjustmentPower = 0.7f; // tuning parameter (0.5 â€“ 1.0 ideal)
 
         // Compute expected frequency proportional to base weight
         for (int i = 0; i < letters.Length; i++)

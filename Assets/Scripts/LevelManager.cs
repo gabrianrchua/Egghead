@@ -1,4 +1,5 @@
 using UnityEngine;
+using Egghead.SaveSystem;
 
 public class LevelManager : Singleton<LevelManager>
 {
@@ -55,7 +56,7 @@ public class LevelManager : Singleton<LevelManager>
 
     private async void Start()
     {
-        SaveManager.SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+        SaveData data = await SaveManager.Instance.GetCurrentSaveData();
 
         TotalScore = 0;
         Level = 1;

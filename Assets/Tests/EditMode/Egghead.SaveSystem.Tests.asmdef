@@ -1,0 +1,12 @@
+{
+  "name": "Egghead.SaveSystem.Tests",
+  "references": [
+    "Egghead.SaveSystem"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

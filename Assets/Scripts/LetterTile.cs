@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using Egghead.SaveSystem;
 
 [RequireComponent(typeof(Animator))]
 public class LetterTile : MonoBehaviour
@@ -54,14 +55,6 @@ public class LetterTile : MonoBehaviour
     public enum TileType { Normal, Fire, Bonus, Gold, Diamond }
     public enum TileDestroyReason { Selected, Fire, Shuffled };
 
-    public struct LetterTileData
-    {
-        public char letter;
-        public int column;
-        public int row;
-        public int tileType;
-    }
-
     /// <summary>
     /// Initialize tile using raw values
     /// </summary>
@@ -90,9 +83,9 @@ public class LetterTile : MonoBehaviour
         ApplySprite();
     }
 
-    public LetterTileData ToLetterTileData()
+    public SavedLetterTileData ToLetterTileData()
     {
-        return new LetterTileData()
+        return new SavedLetterTileData()
         {
             letter = letter,
             column = column,
