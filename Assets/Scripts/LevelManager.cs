@@ -54,10 +54,15 @@ public class LevelManager : Singleton<LevelManager>
 
     private int currentLevelScore;
 
-    private async void Start()
+    internal void PrepareForInitialization()
     {
-        SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+        TotalScore = 0;
+        Level = 0;
+        currentLevelScore = 0;
+    }
 
+    internal void Initialize(SaveData data)
+    {
         TotalScore = 0;
         Level = 1;
         currentLevelScore = 0;
@@ -67,10 +72,6 @@ public class LevelManager : Singleton<LevelManager>
             AddScore(data.Score);
         }
 
-        // initialize UI
-        UIManager ui = UIManager.Instance;
-        ui.SetLevel(Level);
-        ui.SetCurrentScore(TotalScore, LevelPercentage);
     }
 
     /// <summary>

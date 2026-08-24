@@ -17,6 +17,8 @@ public class Modal : Singleton<Modal>
     private Action onNegativeAction;
     private Action onPositiveAction;
 
+    public bool IsOpen => modalBackgroundObject.activeSelf;
+
     /// <summary>
     /// Initializes and opens the modal, subscribing to events for this instance
     /// </summary>

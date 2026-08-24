@@ -57,9 +57,12 @@ public class GameManager : Singleton<GameManager>
     private const float letterBaseX = -2.38f;
     private const float letterDeltaX = 0.8f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    private async void Start()
+    internal void PrepareForInitialization()
     {
+        boardOperationState = BoardOperationState.Initializing;
+        activeBoardOperationCount = 0;
+        fireWarningTiles.Clear();
+
         tileTypeMultipliersDict = new()
         {
             { LetterTile.TileType.Normal, 1f },
@@ -78,14 +81,10 @@ public class GameManager : Singleton<GameManager>
         {
             Destroy(child.gameObject);
         }
+    }
 
-        // initialize UI
-        UIManager ui = UIManager.Instance;
-        ui.ClearCurrentWordScore();
-        ui.SetCurrentWord("");
-
-        // load saved game or create new game depending on save data
-        SaveData data = await SaveManager.Instance.GetCurrentSaveData();
+    internal async Task InitializeBoardAsync(SaveData data)
+    {
         if (data.LetterTileData == null)
         {
             Debug.Log("Initializing as new game");
@@ -135,8 +134,27 @@ public class GameManager : Singleton<GameManager>
             }
         }
         AudioManager.Instance.PlaySound(SoundType.TilesStart);
+        await WaitForTileIntroAsync();
         RefreshFireWarnings();
+    }
+
+    internal void CompleteInitialization()
+    {
         boardOperationState = BoardOperationState.Idle;
+    }
+
+    private Task WaitForTileIntroAsync()
+    {
+        TaskCompletionSource<bool> completion = new();
+        StartCoroutine(CompleteTileIntro(completion));
+        return completion.Task;
+    }
+
+    private IEnumerator CompleteTileIntro(TaskCompletionSource<bool> completion)
+    {
+        yield return new WaitForSeconds(LetterTile.IntroAnimationDuration);
+        yield return null;
+        completion.TrySetResult(true);
     }
 
     private async Task SaveGame()

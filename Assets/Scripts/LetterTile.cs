@@ -23,6 +23,7 @@ public class LetterTile : MonoBehaviour
     private TileVisuals[] tileVisuals = { new(), new(), new(), new(), new() };
 
     internal const float DropAnimationDuration = 0.5f;
+    internal const float IntroAnimationDuration = 0.51666665f;
 
     private static readonly int FireCriticalHash = Animator.StringToHash("FireCritical");
     private static readonly int FireWarningHash = Animator.StringToHash("FireWarning");

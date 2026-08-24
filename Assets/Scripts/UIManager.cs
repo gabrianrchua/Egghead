@@ -18,6 +18,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private Slider musicVolumeSlider;
     [SerializeField] private GameObject gameOverAnimation;
     [SerializeField] private Toggle lowFpsToggle;
+    [SerializeField] private Button shuffleButton;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -67,6 +68,20 @@ public class UIManager : Singleton<UIManager>
     public void SetLevel(int level)
     {
         levelText.text = "LVL\n" + level.ToString();
+    }
+
+    public void ClearGameplayState()
+    {
+        levelText.text = "";
+        scoreText.text = "";
+        levelScoreSlider.value = 0f;
+        SetCurrentWord("");
+        ClearCurrentWordScore();
+    }
+
+    public void SetGameplayControlsEnabled(bool enabled)
+    {
+        shuffleButton.interactable = enabled;
     }
 
     public void BlockTaps()

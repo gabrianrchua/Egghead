@@ -2,7 +2,10 @@
   "name": "Egghead.Gameplay.Tests",
   "references": [
     "Egghead.Authentication",
-    "Unity.Services.Core"
+    "Egghead.SaveSystem",
+    "Unity.Services.Core",
+    "Unity.TextMeshPro",
+    "Unity.ugui"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

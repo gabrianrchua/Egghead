@@ -5373,6 +5373,7 @@ GameObject:
   - component: {fileID: 1114713378}
   - component: {fileID: 1114713379}
   - component: {fileID: 1114713380}
+  - component: {fileID: 1114713381}
   m_Layer: 0
   m_Name: TileArea
   m_TagString: Untagged
@@ -5509,6 +5510,22 @@ MonoBehaviour:
   heatProbabilityB: -0.3
   heatProbabilityC: 4
   heatProbabilityD: 0
+--- !u!114 &1114713381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1114713376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af0d1acc437d4c0428f46093b28cb4d5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameplayBootstrap
+  gameManager: {fileID: 1114713378}
+  levelManager: {fileID: 1114713380}
+  uiManager: {fileID: 1749079359}
+  touchscreenHandler: {fileID: 519420035}
 --- !u!1001 &1147138929
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9837,6 +9854,7 @@ MonoBehaviour:
   musicVolumeSlider: {fileID: 105916876}
   gameOverAnimation: {fileID: 1204606302}
   lowFpsToggle: {fileID: 219252755}
+  shuffleButton: {fileID: 401690324}
 --- !u!1 &1790651287
 GameObject:
   m_ObjectHideFlags: 0

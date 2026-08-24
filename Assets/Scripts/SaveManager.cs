@@ -18,6 +18,9 @@ public class SaveManager : Singleton<SaveManager>
 
     private SaveData _currentSaveData;
     private System.DateTime _currentSaveDataExpires = default;
+    private Task<SaveData> _currentSaveDataLoadTask;
+    private int _saveCacheGeneration;
+    private System.Func<Task<SaveData>> loadGameOverride = null;
     private Task _initializationTask;
     private SaveOperationCoordinator _saveCoordinator;
     private bool cloudAvailable;
@@ -375,15 +378,51 @@ public class SaveManager : Singleton<SaveManager>
     /// Get the current save data, reusing a short-lived cache to avoid repeated load calls.
     /// </summary>
     /// <returns>The latest loaded <c>SaveData</c>.</returns>
-    public async Task<SaveData> GetCurrentSaveData()
+    public Task<SaveData> GetCurrentSaveData()
     {
-        if (_currentSaveDataExpires == default || System.DateTime.UtcNow > _currentSaveDataExpires)
+        if (_currentSaveDataExpires != default && System.DateTime.UtcNow <= _currentSaveDataExpires)
         {
-            _currentSaveData = await LoadGame();
-            _currentSaveDataExpires = System.DateTime.UtcNow.AddSeconds(5d);
+            return Task.FromResult(_currentSaveData);
         }
 
-        return _currentSaveData;
+        if (_currentSaveDataLoadTask == null)
+        {
+            int capturedGeneration = _saveCacheGeneration;
+            TaskCompletionSource<SaveData> completion = new();
+            _currentSaveDataLoadTask = completion.Task;
+            _ = LoadAndCacheCurrentSaveData(completion, capturedGeneration);
+            return completion.Task;
+        }
+
+        return _currentSaveDataLoadTask;
+    }
+
+    private async Task LoadAndCacheCurrentSaveData(
+        TaskCompletionSource<SaveData> completion,
+        int capturedGeneration)
+    {
+        Task<SaveData> loadTask = completion.Task;
+        try
+        {
+            SaveData data = await (loadGameOverride?.Invoke() ?? LoadGame());
+            if (capturedGeneration == _saveCacheGeneration)
+            {
+                _currentSaveData = data;
+                _currentSaveDataExpires = System.DateTime.UtcNow.AddSeconds(5d);
+            }
+            completion.TrySetResult(data);
+        }
+        catch (System.Exception ex)
+        {
+            completion.TrySetException(ex);
+        }
+        finally
+        {
+            if (ReferenceEquals(_currentSaveDataLoadTask, loadTask))
+            {
+                _currentSaveDataLoadTask = null;
+            }
+        }
     }
 
     /// <summary>
@@ -607,7 +646,9 @@ public class SaveManager : Singleton<SaveManager>
     /// </summary>
     private void InvalidateSaveCache()
     {
+        _saveCacheGeneration++;
         _currentSaveDataExpires = default;
+        _currentSaveDataLoadTask = null;
     }
 
     private IAuthenticationSession GetAuthenticationSession()
