@@ -38,6 +38,8 @@ Assets/
 
 Most game logic lives in `Assets/Scripts/GameManager.cs`. Save coordination is handled by `SaveManager.cs`, while `LevelManager.cs`, `UIManager.cs`, and `LetterTile.cs` handle progression, presentation, and individual tile behavior.
 
+The dictionary CSV files are authoring sources, not runtime assets. After editing either file, regenerate the deterministic runtime lookup through `Tools > Egghead > Regenerate Dictionary Data`. See [Dictionary runtime data](Documentation/DictionaryData.md) for validation rules, definition support, and profiling notes.
+
 ## License
 
 Egghead is available under the [MIT License](LICENSE). _Bookworm_ is referenced only as inspiration; this project is not affiliated with or endorsed by its original creators or publishers.

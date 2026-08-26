@@ -1,11 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using static CSVReader;
 using System.Text;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using Egghead.DictionaryData;
 using Egghead.SaveSystem;
+using UnityEngine.Serialization;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -31,7 +32,8 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    [SerializeField] private CSVReader csvReader;
+    [FormerlySerializedAs("csvReader")]
+    [SerializeField] private DictionaryDataProvider dictionaryDataProvider;
     [SerializeField] private LetterTile letterTilePrefab;
     [SerializeField] private float[] bonusTileTypeScoreMultipliers = { 1.25f, 1.5f, 2f }; // order: bonus, gold, diamond
     [SerializeField] private float[] bonusTileTypeProbabilityMultipliers = { 1f, 0.5f, 0.2f }; // bonus, gold, diamond
@@ -199,21 +201,19 @@ public class GameManager : Singleton<GameManager>
     /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
     private char NextLetter()
     {
-        float[] baseWeights = csvReader.letterWeights;
-        Letter[] letters = csvReader.letterList.letters;
-
         // build adjusted weights based on letters currently on board
         Dictionary<char, int> boardCounts = GetBoardLetterCounts();
         int totalBoardLetters = Mathf.Max(1, boardCounts.Values.Sum());
 
-        float[] adjustedWeights = new float[baseWeights.Length];
+        float[] adjustedWeights = new float[dictionaryDataProvider.LetterCount];
         float adjustmentPower = 0.7f; // tuning parameter (0.5 – 1.0 ideal)
 
         // Compute expected frequency proportional to base weight
-        for (int i = 0; i < letters.Length; i++)
+        for (int i = 0; i < dictionaryDataProvider.LetterCount; i++)
         {
-            char c = letters[i].letter;
-            float expectedFreq = baseWeights[i];
+            LetterData letterData = dictionaryDataProvider.GetLetter(i);
+            char c = letterData.Letter;
+            float expectedFreq = letterData.Weight;
             float currentFreq = boardCounts.TryGetValue(c, out int count)
                 ? (float)count / totalBoardLetters
                 : 0.0001f; // avoid division by zero
@@ -222,7 +222,7 @@ public class GameManager : Singleton<GameManager>
             float correction = Mathf.Pow(expectedFreq / currentFreq, adjustmentPower);
             correction = Mathf.Clamp(correction, 0.5f, 2.0f); // avoid wild swings
 
-            adjustedWeights[i] = baseWeights[i] * correction;
+            adjustedWeights[i] = letterData.Weight * correction;
         }
 
         float totalAdjusted = adjustedWeights.Sum();
@@ -230,14 +230,14 @@ public class GameManager : Singleton<GameManager>
         // weighted random draw
         float rand = Random.value * totalAdjusted;
         float cumulative = 0;
-        for (int i = 0; i < letters.Length; i++)
+        for (int i = 0; i < dictionaryDataProvider.LetterCount; i++)
         {
             cumulative += adjustedWeights[i];
             if (cumulative > rand)
-                return letters[i].letter;
+                return dictionaryDataProvider.GetLetter(i).Letter;
         }
 
-        return letters[^1].letter; // fallback, should not happen
+        return dictionaryDataProvider.GetLetter(dictionaryDataProvider.LetterCount - 1).Letter; // fallback, should not happen
     }
 
     /// <summary>
@@ -247,19 +247,20 @@ public class GameManager : Singleton<GameManager>
     /// <returns>A <c>char</c> with the randomly chosen next letter</returns>
     private char SimpleNextLetter()
     {
-        float rand = Random.value * csvReader.letterWeightsTotal;
+        float rand = Random.value * dictionaryDataProvider.LetterWeightsTotal;
 
         float cumulativeWeight = 0;
-        for (int i = 0; i < csvReader.letterList.letters.Length; i++)
+        for (int i = 0; i < dictionaryDataProvider.LetterCount; i++)
         {
-            cumulativeWeight += csvReader.letterWeights[i];
+            LetterData letterData = dictionaryDataProvider.GetLetter(i);
+            cumulativeWeight += letterData.Weight;
             if (cumulativeWeight > rand)
             {
-                return csvReader.letterList.letters[i].letter;
+                return letterData.Letter;
             }
         }
 
-        return csvReader.letterList.letters[^1].letter; // should not happen
+        return dictionaryDataProvider.GetLetter(dictionaryDataProvider.LetterCount - 1).Letter; // should not happen
     }
 
     /// <summary>
@@ -963,17 +964,13 @@ public class GameManager : Singleton<GameManager>
             multiplier *= tileTypeMultipliersDict[type];
             sb.Append(letter == 'Q' ? "QU" : letter);
         }
-        string word = sb.ToString().ToLower();
+        string word = sb.ToString().ToLowerInvariant();
+        if (dictionaryDataProvider.TryGetPoints(word, out int points))
+        {
+            return (word, Mathf.FloorToInt(points * multiplier), highestType);
+        }
 
-        try
-        {
-            Word wordDetails = csvReader.wordList.FindWord(word);
-            return (word, Mathf.FloorToInt(wordDetails.points * multiplier), highestType);
-        }
-        catch (System.InvalidOperationException)
-        {
-            return (word, -1, LetterTile.TileType.Normal);
-        }
+        return (word, -1, LetterTile.TileType.Normal);
     }
 
     /// <summary>

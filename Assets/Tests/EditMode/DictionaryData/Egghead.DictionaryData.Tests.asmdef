@@ -1,0 +1,13 @@
+{
+  "name": "Egghead.DictionaryData.Tests",
+  "references": [
+    "Egghead.DictionaryData",
+    "Egghead.DictionaryData.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

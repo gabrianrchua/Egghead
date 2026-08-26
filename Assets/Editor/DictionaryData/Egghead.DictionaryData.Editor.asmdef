@@ -1,0 +1,10 @@
+{
+  "name": "Egghead.DictionaryData.Editor",
+  "rootNamespace": "Egghead.DictionaryData.Editor",
+  "references": [
+    "Egghead.DictionaryData"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

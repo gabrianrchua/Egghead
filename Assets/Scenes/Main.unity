@@ -5460,7 +5460,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff5f4a31b79410a4bb04cab9f59c9614, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  csvReader: {fileID: 1114713379}
+  dictionaryDataProvider: {fileID: 1114713379}
   letterTilePrefab: {fileID: 6318527394106390291, guid: d9ab8b4c65769c5498e17e8a973e8ac5, type: 3}
   bonusTileTypeScoreMultipliers:
   - 1.25
@@ -5485,10 +5485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7bceeebed679c34fac8334ce14e7b3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  letters: {fileID: 4900000, guid: 798e504decc373c4db3711389b6f18f8, type: 3}
-  words: {fileID: 4900000, guid: 0171d3ac28bc2c1459a247c383cd9eeb, type: 3}
-  letterWeights: []
-  letterWeightsTotal: 0
+  dictionaryData: {fileID: 4900000, guid: 76275dc184e641da96befbf26984b211, type: 3}
 --- !u!114 &1114713380
 MonoBehaviour:
   m_ObjectHideFlags: 0
