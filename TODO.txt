@@ -8,6 +8,7 @@ todo:
 	- title
 	- fire critical
 - show definitions for uncommon words
+- nicer title screen
 
 === p3
 - stats tracking
