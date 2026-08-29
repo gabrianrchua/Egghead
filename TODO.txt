@@ -16,7 +16,7 @@ todo:
 	- high score
 	- time spent
 	- number of words
-- level up modal / graphics with ^^ info
+	- show this somehow at end of level
 - egg character in game
 - high score leaderboard
 

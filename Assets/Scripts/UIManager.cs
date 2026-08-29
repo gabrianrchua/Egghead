@@ -19,6 +19,9 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject gameOverAnimation;
     [SerializeField] private Toggle lowFpsToggle;
     [SerializeField] private Button shuffleButton;
+    [SerializeField] private GameObject levelUpAnimationParent;
+    [SerializeField] private TextMeshProUGUI levelUpPreviousText;
+    [SerializeField] private TextMeshProUGUI levelUpNextText;
 
     public bool IsOverlayActive { get; private set; }
 
@@ -120,5 +123,12 @@ public class UIManager : Singleton<UIManager>
     public void SetLowFpsToggleValue(bool value)
     {
         lowFpsToggle.isOn = value;
+    }
+
+    public void ShowLevelUpAnimation(int newLevel)
+    {
+        levelUpPreviousText.text = (newLevel - 1).ToString();
+        levelUpNextText.text = newLevel.ToString();
+        levelUpAnimationParent.SetActive(true);
     }
 }

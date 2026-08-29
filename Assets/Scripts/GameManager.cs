@@ -461,12 +461,15 @@ public class GameManager : Singleton<GameManager>
             LevelManager levelManager = LevelManager.Instance;
             UIManager uiManager = UIManager.Instance;
 
-            levelManager.AddScore(score);
+            bool leveledUp = levelManager.AddScore(score);
             uiManager.SetLevel(levelManager.Level);
             uiManager.SetCurrentScore(levelManager.TotalScore, levelManager.LevelPercentage);
             uiManager.ClearCurrentWordScore();
             uiManager.SetCurrentWord("");
-            // TODO: level up graphics
+            if (leveledUp)
+            {
+                uiManager.ShowLevelUpAnimation(levelManager.Level);
+            }
 
             BoardMutationResult mutation = DestroyTiles(selectedTiles.ToArray(), LetterTile.TileDestroyReason.Selected);
             selectedTiles.Clear();
