@@ -75,3 +75,5 @@ crashlytics-build.properties
 local/
 AGENTS.md
 CLAUDE.md
+Publishing/
+*.keystore

@@ -14,6 +14,8 @@ namespace Egghead.Authentication
 
         public bool IsSignedIn => authenticationService.IsSignedIn;
 
+        public System.Threading.Tasks.Task DeleteAccountAsync() => authenticationService.DeleteAccountAsync();
+
         public void SignOut(bool clearCredentials) => authenticationService.SignOut(clearCredentials);
 
         public void ClearSessionToken() => authenticationService.ClearSessionToken();

@@ -1,6 +1,10 @@
 todo:
 
 === p1
+- allow account deletion
+	- via web
+- privacy policy, ToS
+- create Play store assets
 
 === p2
 - create music

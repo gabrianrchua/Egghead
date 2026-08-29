@@ -168,6 +168,13 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
             _ = DeleteSaveDataAndRefreshAsync();
         }, "Are you sure you want to delete your saved game?");
     }
+    public void OnDeleteAccountClicked()
+    {
+        Modal.Instance.OpenModal(null, () =>
+        {
+            _ = DeleteAccountAndRefreshAsync();
+        }, "DANGER: Delete your account and saved game? This action is irreversible!", "Cancel", "Yes, I'm sure");
+    }
     #endregion
 
     public void ChangeScene(string sceneName)
@@ -216,6 +223,27 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         }
         finally
         {
+            await RefreshPlayButtonLabelAsync();
+        }
+    }
+
+    /// <summary>
+    /// Delete the current account and refresh the title screen after the operation finishes.
+    /// Confirmation, if desired, must happen before this UI entry point is called.
+    /// </summary>
+    private async Task DeleteAccountAndRefreshAsync()
+    {
+        try
+        {
+            await SaveManager.Instance.DeleteAccountAsync();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Failed to delete account: " + ex.Message);
+        }
+        finally
+        {
+            ApplySaveManagerState();
             await RefreshPlayButtonLabelAsync();
         }
     }

@@ -352,6 +352,13 @@ public class AuthenticationListenerLifecycleTests
             SignedOut?.Invoke();
         }
 
+        public System.Threading.Tasks.Task DeleteAccountAsync()
+        {
+            IsSignedIn = false;
+            SignedOut?.Invoke();
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
         public void ClearSessionToken()
         {
             ClearTokenCalls++;

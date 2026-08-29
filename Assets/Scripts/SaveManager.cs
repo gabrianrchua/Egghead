@@ -314,6 +314,26 @@ public class SaveManager : Singleton<SaveManager>
     }
 
     /// <summary>
+    /// Permanently delete the signed-in Unity Authentication account and its associated save data.
+    /// Cloud Save data is deleted before Authentication because it cannot be accessed after the
+    /// account credentials are removed. Local save data is deleted through the same coordinator.
+    /// </summary>
+    public async Task DeleteAccountAsync()
+    {
+        await EnsureReadyForExplicitCloudAuthAsync();
+
+        IAuthenticationSession session = GetAuthenticationSession();
+        if (session?.IsSignedIn != true)
+        {
+            throw new System.InvalidOperationException("A player must be signed in before deleting an account.");
+        }
+
+        await _saveCoordinator.EnqueueDelete(true);
+        InvalidateSaveCache();
+        await session.DeleteAccountAsync();
+    }
+
+    /// <summary>
     /// Leave local-only mode, sign in anonymously if needed, and merge local/cloud saves by newest timestamp.
     /// </summary>
     public async Task ContinueWithAnonymousCloudAsync()
