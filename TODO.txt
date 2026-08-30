@@ -5,6 +5,7 @@ todo:
 	- via web
 - privacy policy, ToS
 - create Play store assets
+- add third party licenses / about page in title
 
 === p2
 - create music
