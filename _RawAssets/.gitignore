@@ -1,4 +1,6 @@
 wiki-100k.txt
 letters.csv
 words.csv
+words-sanitized.csv
 words_alpha.txt
+__pycache
