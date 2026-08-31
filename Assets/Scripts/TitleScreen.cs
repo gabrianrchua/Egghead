@@ -39,6 +39,11 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     [SerializeField] private Button tutorialForwardButton;
     [SerializeField] private TMP_Text tutorialForwardButtonText;
 
+    [Header("About section")]
+    [SerializeField] private TMP_Text licensesText;
+    [SerializeField] private TextAsset[] licenses;
+    [SerializeField] private RectTransform licensesContentRect;
+
     private int tutorialIndex = 0;
 
     private static readonly int CloseHash = Animator.StringToHash("Close");
@@ -49,6 +54,7 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
     private const int MaxPasswordLength = 30;
     private const string NewGameLabel = "New Game";
     private const string ContinueGameLabel = "Continue Game";
+    private const string BallingburgerUrl = "https://www.youtube.com/@ballingburger";
 
     private void Start()
     {
@@ -64,6 +70,19 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         // Auth may complete before register is complete, so try applying state anyway
         ApplySaveManagerState();
         _ = RefreshPlayButtonLabelAsync();
+
+        // Load third party licenses text
+        System.Text.StringBuilder sb = new();
+        foreach (TextAsset asset in licenses)
+        {
+            sb.Append(asset.text);
+            sb.Append("\n\n----------\n\n");
+        }
+        licensesText.text = sb.ToString();
+        // force TMP text to recalculate its size
+        licensesText.ComputeMarginSize();
+        licensesText.ForceMeshUpdate();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(licensesContentRect);
     }
 
     private void OnDestroy()
@@ -174,6 +193,10 @@ public class TitleScreen : MonoBehaviour, IAuthStateListener
         {
             _ = DeleteAccountAndRefreshAsync();
         }, "DANGER: Delete your account and saved game? This action is irreversible!", "Cancel", "Yes, I'm sure");
+    }
+    public void OnMusicButtonClicked()
+    {
+        Application.OpenURL(BallingburgerUrl);
     }
     #endregion
 
