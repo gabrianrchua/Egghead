@@ -1,0 +1,17 @@
+Put your vocabulary to the test in Egghead, a relaxed letter game built for thoughtful play and high-score chasing.
+
+Connect neighboring letter tiles to spell words - longer, more ambitious words earn bigger rewards, and the higher a word scores, the better your chance of spawning a valuable bonus tile.
+
+But every move matters - fire tiles appear along the way, and each one burns the tile beneath it every move it isn't used. Use them in a word before the fire reaches the bottom and ends your game.
+
+Take your time, plan ahead, and decide when to play it safe or reach for a spectacular word. Stuck? Shuffle the board for a fresh angle. Your progress is saved after every move, so you can pick up right where you left off.
+
+Features:
+- Build words by connecting neighboring letter tiles
+- Improve your chance of earning score-multiplying bonus, gold, or diamond tiles by building high-scoring words
+- Contain spreading fire tiles before they reach the bottom
+- Play at your own pace with no timer
+- Create an optional account to save your progress in the cloud and sync across devices
+- Beat your personal best, one game at a time
+
+How long can you keep the fire at bay - and how high can you score before it reaches the bottom?
