@@ -3,15 +3,12 @@ todo:
 === p1
 
 === p2
-- create music
-	- classic
-	- title
-	- fire critical
 - show definitions for uncommon words
 - background color / image / pattern changes per level (seed per run; programmatically generated)
 
 === p3
 - nicer title screen
+	- add dedicated title screen music
 - stats tracking
 	- high score
 	- time spent
