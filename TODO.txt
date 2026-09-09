@@ -1,7 +1,6 @@
 todo:
 
 === p1
-- create Play store assets
 
 === p2
 - create music
