@@ -12871,6 +12871,7 @@ MonoBehaviour:
   tutorialForwardButtonText: {fileID: 317593183}
   licensesText: {fileID: 759395037}
   licenses:
+  - {fileID: 4900000, guid: 01fe0f1f55295e64a8493498087d2adf, type: 3}
   - {fileID: 4900000, guid: 87c2ba47e21f8be468d8e2de548b925d, type: 3}
   - {fileID: 4900000, guid: 6e59c59b81ab47f9b6ec5781fa725d2c, type: 3}
   - {fileID: 4900000, guid: a3fd2f72fdf64b54c8fae834a463914b, type: 3}

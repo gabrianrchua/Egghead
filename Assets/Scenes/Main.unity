@@ -9068,6 +9068,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   soundAudioSource: {fileID: 1592355492}
   musicAudioSource: {fileID: 1592355494}
+  musicTracks:
+  - {fileID: 8300000, guid: 008de0423c1fcb545a2503d8bcafefa6, type: 3}
+  - {fileID: 8300000, guid: 57bf8587f965cb042956cf0bd2e4b999, type: 3}
+  - {fileID: 8300000, guid: 620d5b80580b6be41b128d86fa1a2d64, type: 3}
+  - {fileID: 8300000, guid: b57b41b8d7d018c458510688664990a1, type: 3}
+  - {fileID: 8300000, guid: d5b7ed7e54b6ff2419dc2a3c6e03f1cc, type: 3}
+  - {fileID: 8300000, guid: 6ac810357ae088747a4e6dc6dcff8753, type: 3}
+  - {fileID: 8300000, guid: 9ded23c1f950803439e95c76e366ea81, type: 3}
+  - {fileID: 8300000, guid: ba2a2c38efb1bc243a79047329bb4a5c, type: 3}
+  - {fileID: 8300000, guid: d42e80757608c7e4ba65f9023a1f5b17, type: 3}
+  - {fileID: 8300000, guid: bf3e652055e04e549af0d5c2be254978, type: 3}
+  minimumSilenceSeconds: 60
+  maximumSilenceSeconds: 180
+  musicFadeSeconds: 4
+  musicOutputMultiplier: 0.5
   soundList:
   - name: TileBurn
     sounds:
